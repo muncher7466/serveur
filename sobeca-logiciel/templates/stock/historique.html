@@ -1,0 +1,145 @@
+{% extends 'layout.html' %}
+
+{% block title %}Historique des sorties de pièces{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-clock-history me-2"></i>Historique des sorties de pièces</h2>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('liste_stock') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Retour au stock
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" id="searchInput" class="form-control" placeholder="Rechercher...">
+            </div>
+        </div>
+        <div class="col-md-4">
+            <select id="pieceFilter" class="form-select">
+                <option value="">Toutes les pièces</option>
+                {% for piece in pieces %}
+                <option value="{{ piece.id }}">{{ piece.nom }} ({{ piece.reference }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <select id="dateFilter" class="form-select">
+                <option value="">Toutes les dates</option>
+                <option value="today">Aujourd'hui</option>
+                <option value="week">Cette semaine</option>
+                <option value="month">Ce mois</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Tableau des sorties -->
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Pièce</th>
+                    <th>Quantité</th>
+                    <th>Valeur</th>
+                    <th>Véhicule</th>
+                    <th>Client</th>
+                    <th>Intervention</th>
+                    <th>Utilisateur</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sortie in sorties %}
+                <tr class="sortie-row" data-piece-id="{{ sortie.piece_id }}">
+                    <td>{{ sortie.date_sortie }}</td>
+                    <td>{{ sortie.piece_info }}</td>
+                    <td>{{ sortie.quantite }}</td>
+                    <td>{{ "%.2f"|format(sortie.valeur) }} €</td>
+                    <td>{{ sortie.vehicule_info }}</td>
+                    <td>{{ sortie.client_info }}</td>
+                    <td>
+                        {% if sortie.intervention_info %}
+                        <span class="badge bg-info">{{ sortie.intervention_info }}</span>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>{{ sortie.utilisateur }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const pieceFilter = document.getElementById('pieceFilter');
+    const dateFilter = document.getElementById('dateFilter');
+    const rows = document.querySelectorAll('.sortie-row');
+
+    function filterRows() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedPieceId = pieceFilter.value;
+        const selectedDate = dateFilter.value;
+        const today = new Date();
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - today.getDay());
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+        rows.forEach(row => {
+            const date = new Date(row.querySelector('td').textContent);
+            const pieceId = row.dataset.pieceId;
+            const text = row.textContent.toLowerCase();
+            
+            let showRow = true;
+            
+            if (searchTerm && !text.includes(searchTerm)) {
+                showRow = false;
+            }
+            
+            if (selectedPieceId && pieceId !== selectedPieceId) {
+                showRow = false;
+            }
+            
+            if (selectedDate) {
+                switch(selectedDate) {
+                    case 'today':
+                        if (date.toDateString() !== today.toDateString()) {
+                            showRow = false;
+                        }
+                        break;
+                    case 'week':
+                        if (date < startOfWeek) {
+                            showRow = false;
+                        }
+                        break;
+                    case 'month':
+                        if (date < startOfMonth) {
+                            showRow = false;
+                        }
+                        break;
+                }
+            }
+            
+            row.style.display = showRow ? '' : 'none';
+        });
+    }
+
+    searchInput.addEventListener('input', filterRows);
+    pieceFilter.addEventListener('change', filterRows);
+    dateFilter.addEventListener('change', filterRows);
+});
+</script>
+{% endblock %} 

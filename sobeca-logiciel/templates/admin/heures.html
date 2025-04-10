@@ -1,0 +1,161 @@
+{% extends "layout.html" %}
+
+{% block title %}Gestion des heures{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Gestion des heures des techniciens</h2>
+
+    <!-- Statistiques par utilisateur -->
+    <div class="row mb-4">
+        {% for user_name, stats in stats_utilisateurs.items() %}
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ user_name }}</h5>
+                    <p class="card-text">
+                        <strong>Total des heures :</strong> {{ "%.1f"|format(stats.total_heures) }} h<br>
+                        <strong>Nombre d'interventions :</strong> {{ stats.nombre_interventions }}<br>
+                        <strong>Moyenne par intervention :</strong> {{ "%.1f"|format(stats.moyenne_heures) }} h
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Liste des interventions -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Interventions</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Technicien</th>
+                            <th>Véhicule</th>
+                            <th>Description</th>
+                            <th>Heures travaillées</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for intervention in interventions %}
+                        <tr>
+                            <td>{{ intervention.date }}</td>
+                            <td>{{ intervention.technicien }}</td>
+                            <td>{{ intervention.vehicule_info if intervention.vehicule_info else '-' }}</td>
+                            <td>{{ intervention.description }}</td>
+                            <td>
+                                <span class="heures-actuelles">{{ "%.1f"|format(intervention.heures|default(0)) }}</span>
+                                <button class="btn btn-sm btn-warning ms-2" onclick="ajusterHeures('{{ intervention.id }}', {{ intervention.heures|default(0) }})">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-danger" onclick="deleteIntervention('{{ intervention.id }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour ajuster les heures -->
+<div class="modal fade" id="heuresModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ajuster les heures</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="heuresForm">
+                    <input type="hidden" id="interventionId">
+                    <div class="mb-3">
+                        <label for="heures" class="form-label">Nombre d'heures</label>
+                        <input type="number" class="form-control" id="heures" min="0" step="0.5" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" onclick="sauvegarderHeures()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let heuresModal;
+
+document.addEventListener('DOMContentLoaded', function() {
+    heuresModal = new bootstrap.Modal(document.getElementById('heuresModal'));
+});
+
+function ajusterHeures(interventionId, heuresActuelles) {
+    document.getElementById('interventionId').value = interventionId;
+    document.getElementById('heures').value = heuresActuelles;
+    heuresModal.show();
+}
+
+function sauvegarderHeures() {
+    const interventionId = document.getElementById('interventionId').value;
+    const heures = document.getElementById('heures').value;
+    
+    fetch('/admin/heures/ajuster', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            intervention_id: interventionId,
+            heures: parseFloat(heures)
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            heuresModal.hide();
+            window.location.reload();
+        } else {
+            alert(data.message || 'Erreur lors de l\'ajustement des heures');
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors de l\'ajustement des heures');
+    });
+}
+
+function deleteIntervention(id) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette intervention ?')) {
+        fetch(`/admin/delete/intervention/${id}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Erreur lors de la suppression');
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors de la suppression');
+        });
+    }
+}
+</script>
+{% endblock %}

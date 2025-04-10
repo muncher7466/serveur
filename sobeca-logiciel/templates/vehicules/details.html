@@ -1,0 +1,178 @@
+{% extends 'layout.html' %}
+
+{% block title %}Détails du Véhicule{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-car-front me-2"></i>Détails du Véhicule</h1>
+    <div>
+        <a href="{{ url_for('liste_vehicules') }}" class="btn btn-secondary me-2">
+            <i class="bi bi-arrow-left me-1"></i>Retour à la liste
+        </a>
+        <a href="{{ url_for('modifier_vehicule', vehicule_id=vehicule.id) }}" class="btn btn-warning">
+            <i class="bi bi-pencil me-1"></i>Modifier
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Informations du véhicule</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="detail-label">Immatriculation</p>
+                        <p class="h5">{{ vehicule.immatriculation }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="detail-label">Propriétaire</p>
+                        <p class="h5">{{ vehicule.proprietaire }}</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="detail-label">Marque</p>
+                        <p class="h5">{{ vehicule.marque }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="detail-label">Modèle</p>
+                        <p class="h5">{{ vehicule.modele }}</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="detail-label">Code Parc</p>
+                        <p class="h5">{{ vehicule.code_parc }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="detail-label">Numéro de Série</p>
+                        <p class="h5">{{ vehicule.numero_serie }}</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="detail-label">Année</p>
+                        <p class="h5">{{ vehicule.annee }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="detail-label">Compteur</p>
+                        <p class="h5">{{ vehicule.kilometrage }} km</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <p class="detail-label">Date d'ajout</p>
+                        <p class="h5">{{ vehicule.date_ajout }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Statistiques</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="interventionsChart" width="400" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Historique des interventions</h5>
+        <a href="{{ url_for('ajouter_intervention') }}" class="btn btn-light btn-sm">
+            <i class="bi bi-plus-circle me-1"></i>Nouvelle intervention
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Compteur</th>
+                        <th>Technicien</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if historique %}
+                        {% for intervention in historique %}
+                            <tr>
+                                <td>{{ intervention.date }}</td>
+                                <td>
+                                    <span class="badge {% if intervention.type == 'Réparation' %}bg-danger{% elif intervention.type == 'Entretien' %}bg-warning{% else %}bg-info{% endif %}">
+                                        {{ intervention.type }}
+                                    </span>
+                                </td>
+                                <td>{{ intervention.description }}</td>
+                                <td>{{ intervention.kilometrage }} km</td>
+                                <td>{{ intervention.technicien }}</td>
+                                <td>
+                                    <a href="{{ url_for('details_intervention', intervention_id=intervention.id) }}" class="btn btn-sm btn-info btn-icon" data-bs-toggle="tooltip" title="Détails">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center">Aucune intervention enregistrée pour ce véhicule</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Graphique des interventions
+        const ctx = document.getElementById('interventionsChart').getContext('2d');
+        
+        // Données d'exemple pour le graphique
+        const interventionsChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'],
+                datasets: [{
+                    label: 'Coût des interventions',
+                    data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    backgroundColor: 'rgba(40, 167, 69, 0.2)',
+                    borderColor: 'rgba(40, 167, 69, 1)',
+                    borderWidth: 2,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Coût (€)'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Si nous avons des données réelles, nous pourrions les utiliser ici
+        {% if historique %}
+            // Code pour remplir le graphique avec des données réelles
+        {% endif %}
+    });
+</script>
+{% endblock %}

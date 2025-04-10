@@ -1,0 +1,88 @@
+{% extends "layout.html" %}
+
+{% block title %}À propos{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h2 class="card-title">À propos de Sobeca Logiciel</h2>
+                    </div>
+                    
+                    <div class="row g-4">
+                        <div class="col-md-12">
+                            <div class="p-4 bg-light rounded">
+                                <h4 class="mb-3">Créateur du site</h4>
+                                <div class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-person-circle fs-1 me-3 text-primary"></i>
+                                    <div>
+                                        <h5 class="mb-1">Steven Muncher</h5>
+                                        <p class="text-muted mb-0">Développeur Full Stack</p>
+                                    </div>
+                                </div>
+                                <p class="mb-0">Passionné par le développement web et la gestion de projets, j'ai créé ce logiciel pour répondre aux besoins spécifiques des garages automobiles.</p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="p-4 bg-light rounded">
+                                <h4 class="mb-3">À propos du projet</h4>
+                                <p>Sobeca Logiciel est une application web conçue pour simplifier la gestion quotidienne des garages automobiles. Elle permet de :</p>
+                                <ul class="list-unstyled">
+                                    <li><i class="bi bi-check-circle-fill text-success me-2"></i>Gérer les interventions et les rendez-vous</li>
+                                    <li><i class="bi bi-check-circle-fill text-success me-2"></i>Suivre l'inventaire des pièces</li>
+                                    <li><i class="bi bi-check-circle-fill text-success me-2"></i>Gérer la facturation</li>
+                                    <li><i class="bi bi-check-circle-fill text-success me-2"></i>Communiquer via le chat intégré</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="p-4 bg-light rounded">
+                                <h4 class="mb-3">Technologies utilisées</h4>
+                                <div class="row g-3">
+                                    <div class="col-6 col-md-4">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-filetype-py text-primary me-2"></i>
+                                            <span>Python/Flask</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-bootstrap text-primary me-2"></i>
+                                            <span>Bootstrap 5</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-filetype-js text-primary me-2"></i>
+                                            <span>JavaScript</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="p-4 bg-light rounded">
+                                <h4 class="mb-3">Contact</h4>
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-envelope me-2 text-primary"></i>
+                                    <span>steven.muncher@gmail.com</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-telephone me-2 text-primary"></i>
+                                    <span>06 95 80 57 31</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

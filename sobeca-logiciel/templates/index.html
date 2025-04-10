@@ -1,0 +1,161 @@
+{% extends 'layout.html' %}
+
+{% block title %}Accueil{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1><i class="bi bi-house-door me-2"></i>Tableau de bord</h1>
+        </div>
+    </div>
+
+    <!-- Véhicules en réparation -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-tools me-2"></i>Véhicules en réparation
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <select class="form-select form-select-sm" id="filtreStatut" style="width: auto;">
+                                <option value="">Tous les statuts</option>
+                                <option value="En cours">En cours</option>
+                                <option value="Terminée">Terminée</option>
+                                <option value="Annulée">Annulée</option>
+                                <option value="En attente">En attente</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Véhicule</th>
+                                    <th>Client</th>
+                                    <th>Type d'intervention</th>
+                                    <th>Technicien</th>
+                                    <th>Date</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for intervention in interventions_en_cours %}
+                                <tr class="intervention-row" data-statut="{{ intervention.statut }}">
+                                    <td>{{ intervention.vehicule_info }}</td>
+                                    <td>{{ intervention.client_info }}</td>
+                                    <td>{{ intervention.type }}</td>
+                                    <td>{{ intervention.technicien }}</td>
+                                    <td>{{ intervention.date }}</td>
+                                    <td>
+                                        <span class="badge {% if intervention.statut == 'En cours' %}bg-warning
+                                                          {% elif intervention.statut == 'Terminée' %}bg-success
+                                                          {% elif intervention.statut == 'Annulée' %}bg-danger
+                                                          {% else %}bg-secondary{% endif %}">
+                                            {{ intervention.statut }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('details_intervention', intervention_id=intervention.id) }}" 
+                                           class="btn btn-sm btn-primary">
+                                            <i class="bi bi-eye me-1"></i>Voir
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center">Aucun véhicule en réparation</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu rapide -->
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-car-front display-4 text-primary mb-3"></i>
+                    <h5 class="card-title">Véhicules</h5>
+                    <p class="card-text">Gérer le parc de véhicules</p>
+                    <a href="{{ url_for('liste_vehicules') }}" class="btn btn-primary">Accéder</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-tools display-4 text-success mb-3"></i>
+                    <h5 class="card-title">Interventions</h5>
+                    <p class="card-text">Suivre les interventions</p>
+                    <a href="{{ url_for('liste_interventions') }}" class="btn btn-success">Accéder</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-box-seam display-4 text-info mb-3"></i>
+                    <h5 class="card-title">Stock</h5>
+                    <p class="card-text">Gérer l'inventaire</p>
+                    <a href="{{ url_for('liste_stock') }}" class="btn btn-info">Accéder</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-people display-4 text-warning mb-3"></i>
+                    <h5 class="card-title">Clients</h5>
+                    <p class="card-text">Gérer les clients</p>
+                    <a href="{{ url_for('liste_clients') }}" class="btn btn-warning">Accéder</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filtreStatut = document.getElementById('filtreStatut');
+    const rows = document.querySelectorAll('.intervention-row');
+    
+    filtreStatut.addEventListener('change', function() {
+        const statutSelectionne = this.value;
+        
+        rows.forEach(row => {
+            if (statutSelectionne === '' || row.dataset.statut === statutSelectionne) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        // Vérifier s'il y a des lignes visibles
+        const lignesVisibles = document.querySelectorAll('.intervention-row[style="display: none;"]').length;
+        const messageAucun = document.querySelector('.table tbody tr:not(.intervention-row)');
+        
+        if (lignesVisibles === rows.length) {
+            if (!messageAucun) {
+                const tbody = document.querySelector('.table tbody');
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Aucune intervention trouvée</td></tr>';
+            }
+        } else if (messageAucun) {
+            messageAucun.remove();
+        }
+    });
+});
+</script>
+{% endblock %}

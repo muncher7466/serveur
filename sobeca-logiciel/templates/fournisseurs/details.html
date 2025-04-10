@@ -1,0 +1,183 @@
+{% extends "layout.html" %}
+
+{% block title %}Détails du fournisseur{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-truck me-2"></i>Détails du fournisseur</h2>
+        <div>
+            <a href="{{ url_for('modifier_fournisseur', id=fournisseur.id) }}" class="btn btn-warning me-2">
+                <i class="bi bi-pencil me-1"></i>Modifier
+            </a>
+            <a href="{{ url_for('liste_fournisseurs') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Informations</h5>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ fournisseur.nom }}</h5>
+                    <p class="card-text">
+                        <strong>Contact :</strong> {{ fournisseur.contact }}<br>
+                        <strong>Téléphone :</strong> {{ fournisseur.telephone }}<br>
+                        <strong>Email :</strong> {{ fournisseur.email }}<br>
+                        <strong>Adresse :</strong> {{ fournisseur.adresse }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Statistiques</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <h3 class="text-primary">{{ stats.nombre_pieces }}</h3>
+                            <p class="text-muted">Pièces en stock</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <h3 class="text-success">{{ "%.2f"|format(stats.valeur_stock) }} €</h3>
+                            <p class="text-muted">Valeur du stock</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <h3 class="text-warning">{{ stats.pieces_stock_faible }}</h3>
+                            <p class="text-muted">Pièces en stock faible</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="bi bi-box-seam me-2"></i>Pièces en stock</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Référence</th>
+                            <th>Nom</th>
+                            <th>Description</th>
+                            <th>Quantité</th>
+                            <th>Prix d'achat</th>
+                            <th>Prix de vente</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if pieces %}
+                            {% for piece in pieces %}
+                                <tr {% if piece.quantite < piece.quantite_min %}class="table-warning"{% endif %}>
+                                    <td>{{ piece.reference }}</td>
+                                    <td>{{ piece.nom }}</td>
+                                    <td>{{ piece.description }}</td>
+                                    <td>
+                                        <span class="badge {% if piece.quantite < piece.quantite_min %}bg-warning{% else %}bg-success{% endif %}">
+                                            {{ piece.quantite }}
+                                        </span>
+                                    </td>
+                                    <td>{{ piece.prix_achat }} €</td>
+                                    <td>{{ piece.prix_vente }} €</td>
+                                    <td>
+                                        <button onclick="ajusterStock('{{ piece.id }}', {{ piece.quantite }})" class="btn btn-sm btn-success btn-icon" data-bs-toggle="tooltip" title="Ajuster le stock">
+                                            <i class="bi bi-plus-slash-minus"></i>
+                                        </button>
+                                        <a href="{{ url_for('modifier_piece', id=piece.id) }}" class="btn btn-sm btn-warning btn-icon" data-bs-toggle="tooltip" title="Modifier">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center">Aucune pièce en stock pour ce fournisseur</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour ajuster le stock -->
+<div class="modal fade" id="stockModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ajuster le stock</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="stockForm">
+                    <input type="hidden" id="pieceId">
+                    <div class="mb-3">
+                        <label for="quantite" class="form-label">Nouvelle quantité</label>
+                        <input type="number" class="form-control" id="quantite" min="0" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" onclick="sauvegarderStock()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let stockModal;
+
+document.addEventListener('DOMContentLoaded', function() {
+    stockModal = new bootstrap.Modal(document.getElementById('stockModal'));
+});
+
+function ajusterStock(pieceId, quantiteActuelle) {
+    document.getElementById('pieceId').value = pieceId;
+    document.getElementById('quantite').value = quantiteActuelle;
+    stockModal.show();
+}
+
+function sauvegarderStock() {
+    const pieceId = document.getElementById('pieceId').value;
+    const quantite = document.getElementById('quantite').value;
+    
+    fetch(`/stock/ajuster/${pieceId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `quantite=${quantite}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Erreur lors de l\'ajustement du stock');
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors de l\'ajustement du stock');
+    });
+    
+    stockModal.hide();
+}
+</script>
+{% endblock %} 

@@ -1,0 +1,76 @@
+<!-- Modal pour créer une nouvelle conversation -->
+<div class="modal fade" id="newConversationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nouvelle conversation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="conversationName" class="form-label">Nom de la conversation</label>
+                    <input type="text" class="form-control" id="conversationName" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Participants</label>
+                    <div id="participantsList" class="border p-2 rounded" style="max-height: 200px; overflow-y: auto;">
+                        <!-- Les participants seront chargés dynamiquement ici -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" onclick="confirmCreateConversation()">Créer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour signaler -->
+<div class="modal fade" id="reportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Signaler un problème</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="reportType" class="form-label">Type de signalement</label>
+                    <select class="form-select" id="reportType" required>
+                        <option value="bug">Bug technique</option>
+                        <option value="inappropriate">Contenu inapproprié</option>
+                        <option value="other">Autre</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="reportContent" class="form-label">Description</label>
+                    <textarea class="form-control" id="reportContent" rows="3" required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-warning" onclick="submitReport()">Signaler</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="deleteConversationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmer la suppression</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer cette conversation ? Cette action est irréversible.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDeleteConversation()">Supprimer</button>
+            </div>
+        </div>
+    </div>
+</div>

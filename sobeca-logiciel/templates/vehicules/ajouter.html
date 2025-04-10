@@ -1,0 +1,166 @@
+{% extends 'layout.html' %}
+
+{% block title %}Ajouter un Véhicule{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-car-front me-2"></i>Ajouter un Véhicule</h1>
+    <a href="{{ url_for('liste_vehicules') }}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Retour à la liste
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form method="post" action="{{ url_for('ajouter_vehicule') }}">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="type_vehicule" class="form-label">Type de véhicule</label>
+                    <select class="form-select" id="type_vehicule" name="type_vehicule" required onchange="toggleControles()">
+                        <option value="">Sélectionner un type</option>
+                        <option value="voiture">Voiture</option>
+                        <option value="camion">Camion</option>
+                        <option value="utilitaire">Utilitaire</option>
+                        <option value="engin">Engin de chantier</option>
+                        <option value="remorque">Remorque</option>
+                        <option value="materiel">Petit matériel</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="client" class="form-label">Client</label>
+                    <select class="form-select" id="client" name="client_id" required>
+                        <option value="">Sélectionner un client</option>
+                        {% for client in clients %}
+                            <option value="{{ client.id }}">{{ client.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="marque" class="form-label">Marque</label>
+                    <input type="text" class="form-control" id="marque" name="marque" required>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="modele" class="form-label">Modèle</label>
+                    <input type="text" class="form-control" id="modele" name="modele" required>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="annee" class="form-label">Année</label>
+                    <input type="number" class="form-control" id="annee" name="annee" min="1900" max="2099" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="immatriculation" class="form-label">Immatriculation</label>
+                    <input type="text" class="form-control" id="immatriculation" name="immatriculation" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="code_parc" class="form-label">Code Parc</label>
+                    <input type="text" class="form-control" id="code_parc" name="code_parc">
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="numero_serie" class="form-label">Numéro de série</label>
+                <input type="text" class="form-control" id="numero_serie" name="numero_serie">
+            </div>
+
+            <div class="mb-3">
+                <label for="kilometrage" class="form-label">Compteur</label>
+                <div class="input-group">
+                    <input type="number" class="form-control" id="kilometrage" name="kilometrage" min="0" required>
+                    <span class="input-group-text">km</span>
+                </div>
+            </div>
+
+            <!-- Contrôles spécifiques -->
+            <div id="controles">
+                <h4 class="mt-4 mb-3">Dates des derniers contrôles</h4>
+                
+                <div id="ct_block" style="display: none;">
+                    <div class="mb-3">
+                        <label for="date_dernier_ct" class="form-label">Date du dernier contrôle technique</label>
+                        <input type="date" class="form-control" id="date_dernier_ct" name="date_dernier_ct">
+                    </div>
+                </div>
+
+                <div id="mine_block" style="display: none;">
+                    <div class="mb-3">
+                        <label for="date_dernier_mine" class="form-label">Date du dernier contrôle des mines</label>
+                        <input type="date" class="form-control" id="date_dernier_mine" name="date_dernier_mine">
+                    </div>
+                </div>
+
+                <div id="tachy_block" style="display: none;">
+                    <div class="mb-3">
+                        <label for="date_dernier_tachy" class="form-label">Date du dernier contrôle tachygraphe</label>
+                        <input type="date" class="form-control" id="date_dernier_tachy" name="date_dernier_tachy">
+                    </div>
+                </div>
+
+                <div id="vgp_block" style="display: none;">
+                    <div class="mb-3">
+                        <label for="date_dernier_vgp" class="form-label">Date de la dernière VGP</label>
+                        <input type="date" class="form-control" id="date_dernier_vgp" name="date_dernier_vgp">
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-end">
+                <button type="reset" class="btn btn-outline-secondary me-2">Réinitialiser</button>
+                <button type="submit" class="btn btn-primary">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleControles() {
+    const typeVehicule = document.getElementById('type_vehicule').value;
+    const controlesDiv = document.getElementById('controles');
+    const ctBlock = document.getElementById('ct_block');
+    const mineBlock = document.getElementById('mine_block');
+    const tachyBlock = document.getElementById('tachy_block');
+    const vgpBlock = document.getElementById('vgp_block');
+    
+    // Réinitialiser tous les champs
+    ctBlock.style.display = 'none';
+    mineBlock.style.display = 'none';
+    tachyBlock.style.display = 'none';
+    vgpBlock.style.display = 'none';
+    
+    // Masquer complètement la section des contrôles pour remorque et petit matériel
+    if (typeVehicule === 'remorque' || typeVehicule === 'materiel') {
+        controlesDiv.style.display = 'none';
+        return;
+    }
+    
+    // Afficher la section des contrôles pour les autres types
+    controlesDiv.style.display = 'block';
+    
+    // Afficher les contrôles appropriés selon le type
+    switch(typeVehicule) {
+        case 'voiture':
+            ctBlock.style.display = 'block';
+            break;
+        case 'camion':
+            ctBlock.style.display = 'block';
+            mineBlock.style.display = 'block';
+            tachyBlock.style.display = 'block';
+            break;
+        case 'utilitaire':
+            ctBlock.style.display = 'block';
+            break;
+        case 'engin':
+            vgpBlock.style.display = 'block';
+            break;
+    }
+}
+
+// Appeler toggleControles au chargement de la page
+document.addEventListener('DOMContentLoaded', toggleControles);
+</script>
+{% endblock %}

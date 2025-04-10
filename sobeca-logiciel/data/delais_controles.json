@@ -1,0 +1,22 @@
+{
+    "ct": {
+        "attention": 60,
+        "urgent": 30,
+        "periode": 365
+    },
+    "mine": {
+        "attention": 60,
+        "urgent": 30,
+        "periode": 365
+    },
+    "tachy": {
+        "attention": 60,
+        "urgent": 30,
+        "periode": 730
+    },
+    "vgp": {
+        "attention": 60,
+        "urgent": 30,
+        "periode": 60
+    }
+}

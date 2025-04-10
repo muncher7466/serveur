@@ -1,0 +1,567 @@
+{% extends "layout.html" %}
+
+{% block title %}Panel d'administration{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active text-white" href="#overview">
+                            <i class="bi bi-speedometer2 me-2"></i>Vue d'ensemble
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="#users">
+                            <i class="bi bi-people me-2"></i>Utilisateurs
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="#vehicles">
+                            <i class="bi bi-car-front me-2"></i>Véhicules
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="#clients">
+                            <i class="bi bi-person-badge me-2"></i>Clients
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="#fournisseurs">
+                            <i class="bi bi-truck me-2"></i>Fournisseurs
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="#interventions">
+                            <i class="bi bi-wrench me-2"></i>Interventions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="#stock">
+                            <i class="bi bi-box-seam me-2"></i>Stock
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="#reports">
+                            <i class="bi bi-exclamation-triangle me-2"></i>Signalements
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('admin_heures') }}">
+                            <i class="bi bi-clock me-2"></i>Gestion des heures
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <!-- Vue d'ensemble -->
+            <div id="overview" class="section">
+                <h2 class="mt-4 mb-4">Vue d'ensemble</h2>
+                <div class="row">
+                    <div class="col-md-3 mb-4">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h5 class="card-title">Utilisateurs</h5>
+                                <p class="card-text display-4">{{ stats.total_users }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-4">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h5 class="card-title">Véhicules</h5>
+                                <p class="card-text display-4">{{ stats.total_vehicles }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-4">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body">
+                                <h5 class="card-title">Stock faible</h5>
+                                <p class="card-text display-4">{{ stats.low_stock }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-4">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body">
+                                <h5 class="card-title">Signalements en attente</h5>
+                                <p class="card-text display-4">{{ stats.pending_reports }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Utilisateurs -->
+            <div id="users" class="section">
+                <h2 class="mt-4 mb-4">Utilisateurs</h2>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Rôle</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>{{ user.name }}</td>
+                                <td>
+                                    <span class="badge {% if user.role == 'admin' %}bg-danger{% else %}bg-primary{% endif %}">
+                                        {{ user.role }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-warning" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#passwordModal{{ user.id }}"
+                                                title="Modifier le mot de passe">
+                                            <i class="bi bi-key"></i>
+                                        </button>
+                                        {% if user.id != 'admin' %}
+                                        <form action="{{ url_for('admin_supprimer_utilisateur', user_id=user.id) }}" 
+                                              method="POST" 
+                                              class="d-inline"
+                                              onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')">
+                                            <button type="submit" 
+                                                    class="btn btn-sm btn-danger ms-1" 
+                                                    title="Supprimer l'utilisateur">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Modal pour changer le mot de passe -->
+                                    <div class="modal fade" id="passwordModal{{ user.id }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Modifier le mot de passe - {{ user.name }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <form action="{{ url_for('admin_modifier_mdp', user_id=user.id) }}" method="POST">
+                                                    <div class="modal-body">
+                                                        <div class="mb-3">
+                                                            <label for="password{{ user.id }}" class="form-label">Nouveau mot de passe</label>
+                                                            <div class="input-group">
+                                                                <input type="password" 
+                                                                       class="form-control" 
+                                                                       id="password{{ user.id }}" 
+                                                                       name="password" 
+                                                                       required 
+                                                                       minlength="6">
+                                                                <button class="btn btn-outline-secondary" 
+                                                                        type="button"
+                                                                        onclick="togglePassword('password{{ user.id }}')">
+                                                                    <i class="bi bi-eye"></i>
+                                                                </button>
+                                                            </div>
+                                                            <div class="form-text">Le mot de passe doit contenir au moins 6 caractères.</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Véhicules -->
+            <div id="vehicles" class="section">
+                <h2 class="mt-4 mb-4">Véhicules</h2>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Marque</th>
+                                <th>Modèle</th>
+                                <th>Immatriculation</th>
+                                <th>Client</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for vehicle in vehicles %}
+                            <tr>
+                                <td>{{ vehicle.marque }}</td>
+                                <td>{{ vehicle.modele }}</td>
+                                <td>{{ vehicle.immatriculation }}</td>
+                                <td>{{ vehicle.proprietaire }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteVehicle('{{ vehicle.id }}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Clients -->
+            <div id="clients" class="section">
+                <h2 class="mt-4 mb-4">Clients</h2>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Prénom</th>
+                                <th>Téléphone</th>
+                                <th>Email</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for client in clients %}
+                            <tr>
+                                <td>{{ client.nom }}</td>
+                                <td>{{ client.prenom }}</td>
+                                <td>{{ client.telephone }}</td>
+                                <td>{{ client.email }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteClient('{{ client.id }}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Fournisseurs -->
+            <div id="fournisseurs" class="section">
+                <h2 class="mt-4 mb-4">Fournisseurs</h2>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Contact</th>
+                                <th>Téléphone</th>
+                                <th>Email</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fournisseur in fournisseurs %}
+                            <tr>
+                                <td>{{ fournisseur.nom }}</td>
+                                <td>{{ fournisseur.contact }}</td>
+                                <td>{{ fournisseur.telephone }}</td>
+                                <td>{{ fournisseur.email }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteFournisseur('{{ fournisseur.id }}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Interventions -->
+            <div id="interventions" class="section">
+                <h2 class="mt-4 mb-4">Interventions</h2>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Véhicule</th>
+                                <th>Description</th>
+                                <th>Technicien</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for intervention in interventions %}
+                            <tr>
+                                <td>{{ intervention.date }}</td>
+                                <td>{{ intervention.vehicule_info if intervention.vehicule_info else '-' }}</td>
+                                <td>{{ intervention.description }}</td>
+                                <td>{{ intervention.technicien }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteIntervention('{{ intervention.id }}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Stock -->
+            <div id="stock" class="section">
+                <h2 class="mt-4 mb-4">Stock</h2>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Pièce</th>
+                                <th>Quantité</th>
+                                <th>Prix</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for piece in stock %}
+                            <tr>
+                                <td>{{ piece.nom }}</td>
+                                <td>{{ piece.quantite }}</td>
+                                <td>{{ piece.prix_unitaire }}€</td>
+                                <td>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteStock('{{ piece.id }}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Signalements -->
+            <div id="reports" class="section">
+                <h2 class="mt-4 mb-4">Signalements</h2>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Utilisateur</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for report in reports %}
+                            <tr>
+                                <td>{{ report.created_at }}</td>
+                                <td>{{ report.user_name }}</td>
+                                <td>{{ report.type }}</td>
+                                <td>{{ report.content }}</td>
+                                <td>{{ report.status }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-success" onclick="resolveReport('{{ report.id }}')">
+                                        <i class="bi bi-check-circle"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteReport('{{ report.id }}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmer la suppression</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer cet élément ? Cette action est irréversible.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">Supprimer</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentDeleteId = null;
+let currentDeleteType = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialiser le modal de suppression
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    
+    // Gérer la confirmation de suppression
+    document.getElementById('confirmDelete').addEventListener('click', function() {
+        if (!currentDeleteId || !currentDeleteType) return;
+        
+        let url;
+        switch(currentDeleteType) {
+            case 'user':
+                url = `/admin/delete/user/${currentDeleteId}`;
+                break;
+            case 'vehicle':
+                url = `/admin/delete/vehicle/${currentDeleteId}`;
+                break;
+            case 'client':
+                url = `/admin/delete/client/${currentDeleteId}`;
+                break;
+            case 'fournisseur':
+                url = `/admin/delete/fournisseur/${currentDeleteId}`;
+                break;
+            case 'intervention':
+                url = `/admin/delete/intervention/${currentDeleteId}`;
+                break;
+            case 'stock':
+                url = `/admin/delete/stock/${currentDeleteId}`;
+                break;
+            case 'report':
+                url = `/api/reports/${currentDeleteId}`;
+                break;
+        }
+        
+        fetch(url, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.message || 'Erreur lors de la suppression');
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors de la suppression');
+        });
+        
+        deleteModal.hide();
+    });
+});
+
+function deleteUser(id) {
+    currentDeleteId = id;
+    currentDeleteType = 'user';
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+function deleteVehicle(id) {
+    currentDeleteId = id;
+    currentDeleteType = 'vehicle';
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+function deleteClient(id) {
+    currentDeleteId = id;
+    currentDeleteType = 'client';
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+function deleteFournisseur(id) {
+    currentDeleteId = id;
+    currentDeleteType = 'fournisseur';
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+function deleteIntervention(id) {
+    currentDeleteId = id;
+    currentDeleteType = 'intervention';
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+function deleteStock(id) {
+    currentDeleteId = id;
+    currentDeleteType = 'stock';
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+function deleteReport(id) {
+    currentDeleteId = id;
+    currentDeleteType = 'report';
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+// Fonction pour résoudre un signalement
+function resolveReport(id) {
+    fetch(`/api/reports/${id}/resolve`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            note: 'Résolu par l\'administrateur'
+        })
+    })
+    .then(response => response.json())
+    .then(() => {
+        window.location.reload();
+    })
+    .catch(error => {
+        console.error('Erreur lors de la résolution du signalement:', error);
+        alert('Erreur lors de la résolution du signalement');
+    });
+}
+
+// Fonction pour afficher/masquer le mot de passe
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    const icon = input.nextElementSibling.querySelector('i');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('bi-eye');
+        icon.classList.add('bi-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+    }
+}
+
+// Navigation fluide
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+            behavior: 'smooth'
+        });
+    });
+});
+</script>
+{% endblock %}

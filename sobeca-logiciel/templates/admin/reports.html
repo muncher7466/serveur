@@ -1,0 +1,198 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Gestion des signalements</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Utilisateur</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reports-list">
+                        <!-- Les signalements seront chargés dynamiquement ici -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour résoudre un signalement -->
+<div class="modal fade" id="resolveReportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Résoudre le signalement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="resolutionNote" class="form-label">Note de résolution</label>
+                    <textarea class="form-control" id="resolutionNote" rows="3" required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-success" onclick="confirmResolveReport()">Résoudre</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="deleteReportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmer la suppression</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer ce signalement ? Cette action est irréversible.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDeleteReport()">Supprimer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+let currentReportId = null;
+
+// Fonction pour charger les signalements
+function loadReports() {
+    fetch('/api/reports')
+        .then(response => response.json())
+        .then(reports => {
+            const reportsList = document.getElementById('reports-list');
+            reportsList.innerHTML = reports.map(report => `
+                <tr>
+                    <td>${new Date(report.created_at).toLocaleString()}</td>
+                    <td>${report.user_name}</td>
+                    <td>${getReportTypeLabel(report.type)}</td>
+                    <td>${report.content}</td>
+                    <td>
+                        <span class="badge ${report.status === 'pending' ? 'bg-warning' : 'bg-success'}">
+                            ${report.status === 'pending' ? 'En attente' : 'Résolu'}
+                        </span>
+                    </td>
+                    <td>
+                        ${report.status === 'pending' ? `
+                            <button class="btn btn-sm btn-success me-2" onclick="resolveReport('${report.id}')">
+                                <i class="bi bi-check-circle"></i> Résoudre
+                            </button>
+                        ` : ''}
+                        <button class="btn btn-sm btn-danger" onclick="deleteReport('${report.id}')">
+                            <i class="bi bi-trash"></i> Supprimer
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des signalements:', error);
+            alert('Erreur lors du chargement des signalements');
+        });
+}
+
+// Fonction pour obtenir le libellé du type de signalement
+function getReportTypeLabel(type) {
+    const types = {
+        'bug': 'Bug technique',
+        'inappropriate': 'Contenu inapproprié',
+        'other': 'Autre'
+    };
+    return types[type] || type;
+}
+
+// Fonction pour ouvrir le modal de résolution
+function resolveReport(reportId) {
+    currentReportId = reportId;
+    const modal = new bootstrap.Modal(document.getElementById('resolveReportModal'));
+    modal.show();
+}
+
+// Fonction pour confirmer la résolution
+function confirmResolveReport() {
+    if (!currentReportId) return;
+
+    const note = document.getElementById('resolutionNote').value;
+    if (!note) {
+        alert('Veuillez ajouter une note de résolution');
+        return;
+    }
+
+    fetch(`/api/reports/${currentReportId}/resolve`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            note: note
+        })
+    })
+    .then(response => response.json())
+    .then(() => {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('resolveReportModal'));
+        modal.hide();
+        document.getElementById('resolutionNote').value = '';
+        loadReports();
+    })
+    .catch(error => {
+        console.error('Erreur lors de la résolution du signalement:', error);
+        alert('Erreur lors de la résolution du signalement');
+    });
+}
+
+// Fonction pour ouvrir le modal de suppression
+function deleteReport(reportId) {
+    currentReportId = reportId;
+    const modal = new bootstrap.Modal(document.getElementById('deleteReportModal'));
+    modal.show();
+}
+
+// Fonction pour confirmer la suppression
+function confirmDeleteReport() {
+    if (!currentReportId) return;
+
+    fetch(`/api/reports/${currentReportId}`, {
+        method: 'DELETE'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Erreur lors de la suppression');
+        }
+        return response.json();
+    })
+    .then(() => {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('deleteReportModal'));
+        modal.hide();
+        loadReports();
+    })
+    .catch(error => {
+        console.error('Erreur lors de la suppression du signalement:', error);
+        alert('Erreur lors de la suppression du signalement. Veuillez réessayer.');
+    });
+}
+
+// Charger les signalements au démarrage
+document.addEventListener('DOMContentLoaded', function() {
+    loadReports();
+});
+</script>
+{% endblock %}
+{% endblock %} 

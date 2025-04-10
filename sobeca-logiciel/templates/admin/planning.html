@@ -1,0 +1,280 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="page-title">
+            <i class="fas fa-calendar-alt text-primary me-2"></i>
+            Planning des véhicules
+        </h2>
+        <a href="{{ url_for('ajouter_planning') }}" class="btn btn-success btn-add">
+            <i class="fas fa-plus me-2"></i> Nouveau planning
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Véhicule</th>
+                            <th>Date de début</th>
+                            <th>Date de retour estimée</th>
+                            <th>Statut</th>
+                            <th>Commentaire</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for planning in plannings %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-car text-secondary me-2"></i>
+                                    <div>
+                                        <div class="fw-bold">{{ planning.vehicule_marque }} {{ planning.vehicule_modele }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="date-badge">
+                                    <i class="far fa-calendar me-1"></i>
+                                    {{ planning.date_debut }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="date-badge">
+                                    <i class="far fa-calendar-check me-1"></i>
+                                    {{ planning.date_retour_estimee if planning.date_retour_estimee else "Non définie" }}
+                                </div>
+                            </td>
+                            <td>
+                                <form action="{{ url_for('modifier_statut_planning', id=planning.id) }}" method="POST" class="d-inline">
+                                    <select name="statut" class="form-select form-select-sm status-select status-{{ planning.statut.lower().replace(' ', '-') }}" 
+                                            onchange="this.form.submit()">
+                                        {% for statut in statuts.values() %}
+                                        <option value="{{ statut }}" 
+                                                {% if planning.statut == statut %}selected{% endif %}
+                                                class="status-option-{{ statut.lower().replace(' ', '-') }}">
+                                            {{ statut }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </form>
+                            </td>
+                            <td>
+                                <div class="comment-text">
+                                    {% if planning.commentaire %}
+                                        <i class="far fa-comment-dots text-muted me-1"></i>
+                                        {{ planning.commentaire }}
+                                    {% else %}
+                                        <span class="text-muted">Aucun commentaire</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <div class="action-buttons">
+                                    <a href="{{ url_for('modifier_planning', id=planning.id) }}" 
+                                       class="btn btn-icon btn-primary" 
+                                       data-bs-toggle="tooltip"
+                                       data-bs-placement="top"
+                                       title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form action="{{ url_for('supprimer_planning', id=planning.id) }}" 
+                                          method="POST" 
+                                          class="d-inline">
+                                        <button type="submit" 
+                                                class="btn btn-icon btn-danger ms-1" 
+                                                data-bs-toggle="tooltip"
+                                                data-bs-placement="top"
+                                                title="Supprimer"
+                                                onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce planning ?')">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+:root {
+    --status-en-réparation: #fff3cd;
+    --status-terminé: #d1e7dd;
+    --status-en-attente: #cfe2ff;
+    --status-en-diagnostic: #f8d7da;
+    --status-pièces-commandées: #e2e3e5;
+}
+
+.page-title {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.btn-add {
+    padding: 0.5rem 1.2rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.card {
+    border-radius: 10px;
+    border: none;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    font-weight: 600;
+    color: #2c3e50;
+    border-bottom-width: 2px;
+}
+
+.table td {
+    padding: 1rem 0.75rem;
+    vertical-align: middle;
+}
+
+.date-badge {
+    display: inline-block;
+    padding: 0.3rem 0.8rem;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #495057;
+}
+
+.status-select {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 0.3rem 2rem 0.3rem 0.8rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.status-select:hover {
+    border-color: #6c757d;
+}
+
+.status-en-réparation {
+    background-color: #fff3cd !important;
+}
+
+.status-terminé {
+    background-color: #d1e7dd !important;
+}
+
+.status-en-attente {
+    background-color: #cfe2ff !important;
+}
+
+.status-en-diagnostic {
+    background-color: #f8d7da !important;
+}
+
+.status-pièces-commandées {
+    background-color: #e2e3e5 !important;
+}
+
+.status-option-en-réparation {
+    background-color: #fff3cd !important;
+}
+
+.status-option-terminé {
+    background-color: #d1e7dd !important;
+}
+
+.status-option-en-attente {
+    background-color: #cfe2ff !important;
+}
+
+.status-option-en-diagnostic {
+    background-color: #f8d7da !important;
+}
+
+.status-option-pièces-commandées {
+    background-color: #e2e3e5 !important;
+}
+
+.comment-text {
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.9rem;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-icon i {
+    font-size: 0.875rem;
+}
+
+.btn-primary {
+    background-color: #4a6cf7;
+    border-color: #4a6cf7;
+}
+
+.btn-primary:hover {
+    background-color: #3d5bd9;
+    border-color: #3d5bd9;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-danger:hover {
+    background-color: #bb2d3b;
+    border-color: #bb2d3b;
+}
+
+/* Animation pour les lignes du tableau */
+.table-hover tbody tr {
+    transition: all 0.2s ease;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+    transform: scale(1.01);
+}
+</style>
+{% endblock %}

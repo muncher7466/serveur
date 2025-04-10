@@ -1,0 +1,29 @@
+[
+    {
+        "id": "b69f8892-2829-4690-a643-e449edd46690",
+        "piece_id": "420c7e0a-9148-43d5-a14b-8e49f64f4675",
+        "type": "inventaire",
+        "ancienne_quantite": 0,
+        "nouvelle_quantite": 2,
+        "date": "2025-04-07 16:00:07",
+        "commentaire": "Ajustement lors de l'inventaire (Écart: 2)"
+    },
+    {
+        "id": "fc0b2504-c5ab-4998-87c0-3d0d8938e570",
+        "piece_id": "150f58c3-22ae-4eb1-a2ed-97f04c107caa",
+        "type": "inventaire",
+        "ancienne_quantite": 1500,
+        "nouvelle_quantite": 1500,
+        "date": "2025-04-07 16:00:07",
+        "commentaire": "Ajustement lors de l'inventaire (Écart: 0)"
+    },
+    {
+        "id": "4035403a-a7c7-4083-aa0d-ddb18e2baeff",
+        "piece_id": "10a053ad-78a2-43e9-9110-3615d7a69386",
+        "type": "inventaire",
+        "ancienne_quantite": 11,
+        "nouvelle_quantite": 11,
+        "date": "2025-04-07 16:00:07",
+        "commentaire": "Ajustement lors de l'inventaire (Écart: 0)"
+    }
+]

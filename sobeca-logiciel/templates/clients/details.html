@@ -1,0 +1,211 @@
+{% extends 'layout.html' %}
+
+{% block title %}Détails du Client{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-person me-2"></i>Détails du Client</h1>
+    <a href="{{ url_for('liste_clients') }}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Retour à la liste
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Informations du client</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3 text-end">
+                    <a href="{{ url_for('modifier_client', client_id=client.id) }}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-pencil-square me-1"></i>Modifier
+                    </a>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="detail-label">Nom</p>
+                        <p class="h5">{{ client.nom }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="detail-label">Prénom</p>
+                        <p class="h5">{{ client.prenom }}</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="detail-label">Téléphone</p>
+                        <p class="h5">{{ client.telephone }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="detail-label">Email</p>
+                        <p class="h5">{{ client.email }}</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <p class="detail-label">Adresse</p>
+                        <p class="h5">{{ client.adresse }}</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="detail-label">Date d'ajout</p>
+                        <p class="h5">{{ client.date_ajout }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="detail-label">Total des interventions</p>
+                        <p class="h5">{{ total_interventions }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Statistiques</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title text-muted">Véhicules</h6>
+                                <p class="display-5">{{ vehicules|length }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title text-muted">Interventions</h6>
+                                <p class="display-5">{{ total_interventions }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-car-front me-2"></i>Véhicules du client</h5>
+        <a href="{{ url_for('ajouter_vehicule') }}" class="btn btn-light btn-sm">
+            <i class="bi bi-plus-circle me-1"></i>Ajouter un véhicule
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Immatriculation</th>
+                        <th>Marque</th>
+                        <th>Modèle</th>
+                        <th>Année</th>
+                        <th>Compteur</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if vehicules %}
+                        {% for vehicule in vehicules %}
+                            <tr>
+                                <td>{{ vehicule.immatriculation }}</td>
+                                <td>{{ vehicule.marque }}</td>
+                                <td>{{ vehicule.modele }}</td>
+                                <td>{{ vehicule.annee }}</td>
+                                <td>{{ vehicule.kilometrage }} km</td>
+                                <td>
+                                    <a href="{{ url_for('details_vehicule', vehicule_id=vehicule.id) }}" class="btn btn-sm btn-info btn-icon" data-bs-toggle="tooltip" title="Détails">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('modifier_vehicule', vehicule_id=vehicule.id) }}" class="btn btn-sm btn-warning btn-icon" data-bs-toggle="tooltip" title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center">Aucun véhicule enregistré pour ce client</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-tools me-2"></i>Historique des interventions</h5>
+        <a href="{{ url_for('ajouter_intervention') }}" class="btn btn-dark btn-sm">
+            <i class="bi bi-plus-circle me-1"></i>Nouvelle intervention
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Véhicule</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if interventions %}
+                        {% for intervention in interventions %}
+                            <tr>
+                                <td>{{ intervention.date }}</td>
+                                <td>
+                                    {% if intervention.vehicule %}
+                                        {{ intervention.vehicule.marque }} {{ intervention.vehicule.modele }}
+                                        ({{ intervention.vehicule.immatriculation }})
+                                    {% else %}
+                                        Véhicule inconnu
+                                    {% endif %}
+                                </td>
+                                <td>{{ intervention.type }}</td>
+                                <td>
+                                    {% if intervention.description|length > 50 %}
+                                        {{ intervention.description[:50] }}...
+                                    {% else %}
+                                        {{ intervention.description }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge {% if intervention.statut == 'Terminé' %}bg-success{% else %}bg-warning{% endif %}">
+                                        {{ intervention.statut }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('details_intervention', intervention_id=intervention.id) }}" class="btn btn-sm btn-info btn-icon" data-bs-toggle="tooltip" title="Détails">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('modifier_intervention', intervention_id=intervention.id) }}" class="btn btn-sm btn-warning btn-icon" data-bs-toggle="tooltip" title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center">Aucune intervention enregistrée pour ce client</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Modifier le planning</h2>
+    
+    <form method="POST" class="mt-4">
+        <div class="mb-3">
+            <label for="vehicule_id" class="form-label">Véhicule</label>
+            <select name="vehicule_id" id="vehicule_id" class="form-select" required>
+                <option value="">Sélectionner un véhicule</option>
+                {% for vehicule in vehicules %}
+                <option value="{{ vehicule.id }}" {% if vehicule.id == planning.vehicule_id %}selected{% endif %}>
+                    {{ vehicule.marque }} {{ vehicule.modele }} ({{ vehicule.immatriculation }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="date_debut" class="form-label">Date de début</label>
+            <input type="date" class="form-control" id="date_debut" name="date_debut" 
+                   value="{{ planning.date_debut }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="date_retour_estimee" class="form-label">Date de retour estimée</label>
+            <input type="date" class="form-control" id="date_retour_estimee" name="date_retour_estimee"
+                   value="{{ planning.date_retour_estimee }}">
+        </div>
+
+        <div class="mb-3">
+            <label for="statut" class="form-label">Statut</label>
+            <select name="statut" id="statut" class="form-select" required>
+                <option value="">Sélectionner un statut</option>
+                {% for statut in statuts.values() %}
+                <option value="{{ statut }}" {% if planning.statut == statut %}selected{% endif %}>
+                    {{ statut }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="commentaire" class="form-label">Commentaire</label>
+            <textarea class="form-control" id="commentaire" name="commentaire" rows="3">{{ planning.commentaire }}</textarea>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Enregistrer
+            </button>
+            <a href="{{ url_for('planning') }}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Annuler
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,137 @@
+{% extends 'layout.html' %}
+
+{% block title %}Ajouter un Planning{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-calendar-plus me-2"></i>Ajouter un Planning
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="client_id" class="form-label">Client</label>
+                            <select class="form-select" id="client_id" name="client_id" required>
+                                <option value="">Sélectionnez un client</option>
+                                {% for client in clients %}
+                                    <option value="{{ client.nom }} {{ client.prenom }}">
+                                        {{ client.nom }} {{ client.prenom }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="vehicule_id" class="form-label">Véhicule</label>
+                            <select class="form-select" id="vehicule_id" name="vehicule_id" required disabled>
+                                <option value="">Sélectionnez d'abord un client</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="date_debut" class="form-label">Date de début</label>
+                            <input type="date" class="form-control" id="date_debut" name="date_debut" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="statut" class="form-label">Statut</label>
+                            <select class="form-select" id="statut" name="statut" required>
+                                <option value="">Sélectionnez un statut</option>
+                                <option value="En chantier">En chantier</option>
+                                <option value="En réparation">En réparation</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="numero_chantier_group" style="display: none;">
+                            <label for="numero_chantier" class="form-label">Numéro de chantier</label>
+                            <input type="text" class="form-control" id="numero_chantier" name="numero_chantier">
+                        </div>
+
+                        <div class="mb-3" id="commentaire_group" style="display: none;">
+                            <label for="commentaire" class="form-label">Commentaire</label>
+                            <textarea class="form-control" id="commentaire" name="commentaire" rows="3" placeholder="Entrez votre commentaire..."></textarea>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i>Enregistrer
+                            </button>
+                            <a href="{{ url_for('planning') }}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Retour
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Données des véhicules par client
+const vehiculesParClient = {{ vehicules_par_client|tojson|safe }};
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Définir la date minimale à aujourd'hui
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date_debut').min = today;
+
+    // Gérer le changement de client
+    document.getElementById('client_id').addEventListener('change', function() {
+        const vehiculeSelect = document.getElementById('vehicule_id');
+        const clientNom = this.value;
+        
+        // Réinitialiser la liste des véhicules
+        vehiculeSelect.innerHTML = '<option value="">Sélectionnez un véhicule</option>';
+        
+        if (clientNom && vehiculesParClient[clientNom]) {
+            // Activer le select des véhicules
+            vehiculeSelect.disabled = false;
+            
+            // Ajouter les véhicules du client
+            vehiculesParClient[clientNom].forEach(vehicule => {
+                const option = document.createElement('option');
+                option.value = vehicule.id;
+                option.textContent = `${vehicule.marque} ${vehicule.modele} (${vehicule.immatriculation})`;
+                vehiculeSelect.appendChild(option);
+            });
+        } else {
+            // Désactiver le select des véhicules
+            vehiculeSelect.disabled = true;
+        }
+    });
+
+    // Gérer l'affichage des champs spécifiques selon le statut
+    document.getElementById('statut').addEventListener('change', function() {
+        const numeroChantierGroup = document.getElementById('numero_chantier_group');
+        const numeroChantierInput = document.getElementById('numero_chantier');
+        const commentaireGroup = document.getElementById('commentaire_group');
+        const commentaireInput = document.getElementById('commentaire');
+        
+        // Masquer tous les groupes d'abord
+        numeroChantierGroup.style.display = 'none';
+        commentaireGroup.style.display = 'none';
+        
+        // Désactiver les champs requis
+        numeroChantierInput.required = false;
+        commentaireInput.required = false;
+        
+        // Afficher le champ approprié selon le statut
+        if (this.value === 'En chantier') {
+            numeroChantierGroup.style.display = 'block';
+            numeroChantierInput.required = true;
+        } else if (this.value === 'En réparation') {
+            commentaireGroup.style.display = 'block';
+            commentaireInput.required = true;
+        }
+    });
+});
+</script>
+{% endblock %} 

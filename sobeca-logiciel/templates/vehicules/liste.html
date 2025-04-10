@@ -1,0 +1,72 @@
+{% extends 'layout.html' %}
+
+{% block title %}Liste des Véhicules{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">VÉHICULES</h1>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('alertes_controles') }}" class="btn btn-warning btn-lg">
+            <i class="bi bi-exclamation-triangle me-2"></i>ALERTES CONTRÔLES
+        </a>
+        <a href="{{ url_for('ajouter_vehicule') }}" class="btn btn-primary btn-lg">
+            <i class="bi bi-plus-lg me-2"></i>AJOUTER UN VÉHICULE
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="search-container mb-3">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" id="searchVehicule" class="form-control search-input" placeholder="Rechercher un véhicule..." data-table="vehiculesTable">
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-hover" id="vehiculesTable">
+                <thead>
+                    <tr>
+                        <th>Immatriculation</th>
+                        <th>Code Parc</th>
+                        <th>N° Série</th>
+                        <th>Marque</th>
+                        <th>Modèle</th>
+                        <th>Année</th>
+                        <th>Compteur</th>
+                        <th>Propriétaire</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if vehicules %}
+                        {% for vehicule in vehicules %}
+                            <tr>
+                                <td>{{ vehicule.immatriculation }}</td>
+                                <td>{{ vehicule.code_parc }}</td>
+                                <td>{{ vehicule.numero_serie }}</td>
+                                <td>{{ vehicule.marque }}</td>
+                                <td>{{ vehicule.modele }}</td>
+                                <td>{{ vehicule.annee }}</td>
+                                <td>{{ vehicule.kilometrage }} km</td>
+                                <td>{{ vehicule.proprietaire }}</td>
+                                <td>
+                                    <a href="{{ url_for('details_vehicule', vehicule_id=vehicule.id) }}" class="btn btn-sm btn-info btn-icon" data-bs-toggle="tooltip" title="Détails">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('modifier_vehicule', vehicule_id=vehicule.id) }}" class="btn btn-sm btn-warning btn-icon" data-bs-toggle="tooltip" title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center">Aucun véhicule enregistré</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

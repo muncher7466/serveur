@@ -1,0 +1,16 @@
+[
+    {
+        "id": "admin",
+        "username": "admin",
+        "password": "pbkdf2:sha256:600000$N9jemafDABDbP9RI$ec50abdb635575bc424ec0b5217c5a9712d8ffbbb3eadac6f6bb815f8e4dfad5",
+        "name": "Administrateur",
+        "role": "admin"
+    },
+    {
+        "id": "dc0869ff-f5d9-4bcb-94af-f55e71339bcc",
+        "username": "alycia",
+        "password": "pbkdf2:sha256:600000$reS7yOUqhj1NDE1J$03424ebfed790319467a939ed085696d3f63cc9c86ccd61b8a845cf304418bc5",
+        "name": "Alycia",
+        "role": "user"
+    }
+]

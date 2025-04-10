@@ -1,0 +1,98 @@
+{% extends 'layout.html' %}
+
+{% block title %}Modifier le Planning{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-calendar-check me-2"></i>Modifier le Planning
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="vehicule_id" class="form-label">Véhicule</label>
+                            <select class="form-select" id="vehicule_id" name="vehicule_id" required>
+                                <option value="">Sélectionnez un véhicule</option>
+                                {% for vehicule in vehicules %}
+                                    <option value="{{ vehicule.id }}" {% if vehicule.id == planning.vehicule_id %}selected{% endif %}>
+                                        {{ vehicule.marque }} {{ vehicule.modele }} ({{ vehicule.immatriculation }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="date_debut" class="form-label">Date de début</label>
+                                    <input type="date" class="form-control" id="date_debut" name="date_debut" 
+                                           value="{{ planning.date_debut }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="date_fin" class="form-label">Date de fin</label>
+                                    <input type="date" class="form-control" id="date_fin" name="date_fin" 
+                                           value="{{ planning.date_fin }}" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="type" class="form-label">Type</label>
+                            <select class="form-select" id="type" name="type" required>
+                                <option value="">Sélectionnez un type</option>
+                                <option value="Réparation" {% if planning.type == 'Réparation' %}selected{% endif %}>Réparation</option>
+                                <option value="Entretien" {% if planning.type == 'Entretien' %}selected{% endif %}>Entretien</option>
+                                <option value="Diagnostic" {% if planning.type == 'Diagnostic' %}selected{% endif %}>Diagnostic</option>
+                                <option value="Autre" {% if planning.type == 'Autre' %}selected{% endif %}>Autre</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" required>{{ planning.description }}</textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="statut" class="form-label">Statut</label>
+                            <select class="form-select" id="statut" name="statut" required>
+                                <option value="">Sélectionnez un statut</option>
+                                <option value="Planifié" {% if planning.statut == 'Planifié' %}selected{% endif %}>Planifié</option>
+                                <option value="En cours" {% if planning.statut == 'En cours' %}selected{% endif %}>En cours</option>
+                                <option value="Terminé" {% if planning.statut == 'Terminé' %}selected{% endif %}>Terminé</option>
+                                <option value="Annulé" {% if planning.statut == 'Annulé' %}selected{% endif %}>Annulé</option>
+                            </select>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i>Enregistrer
+                            </button>
+                            <a href="{{ url_for('planning') }}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Retour
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mettre à jour la date de fin minimale quand la date de début change
+    document.getElementById('date_debut').addEventListener('change', function() {
+        document.getElementById('date_fin').min = this.value;
+    });
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,225 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">
+        <i class="fas fa-cogs text-primary me-2"></i>
+        Panneau d'administration
+    </h2>
+
+    <div class="row">
+        <!-- Gestion des utilisateurs -->
+        <div class="col-md-12 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users me-2"></i>
+                        Gestion des utilisateurs
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nom d'utilisateur</th>
+                                    <th>Nom complet</th>
+                                    <th>Rôle</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-user text-primary me-2"></i>
+                                            {{ user.username }}
+                                        </div>
+                                    </td>
+                                    <td>{{ user.name }}</td>
+                                    <td>
+                                        <span class="badge {% if user.role == 'admin' %}bg-danger{% else %}bg-primary{% endif %}">
+                                            {{ user.role }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-outline-primary btn-sm"
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#modifierMdpModal{{ user.id }}">
+                                            <i class="fas fa-key me-1"></i>
+                                            Modifier mot de passe
+                                        </button>
+                                    </td>
+                                </tr>
+
+                                <!-- Modal pour modifier le mot de passe -->
+                                <div class="modal fade" id="modifierMdpModal{{ user.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-light">
+                                                <h5 class="modal-title">
+                                                    <i class="fas fa-key text-primary me-2"></i>
+                                                    Modifier le mot de passe de {{ user.username }}
+                                                </h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <form action="{{ url_for('admin_modifier_mdp', user_id=user.id) }}" method="POST">
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label for="nouveau_mdp{{ user.id }}" class="form-label">
+                                                            Nouveau mot de passe
+                                                        </label>
+                                                        <div class="input-group">
+                                                            <input type="password" 
+                                                                   class="form-control" 
+                                                                   id="nouveau_mdp{{ user.id }}" 
+                                                                   name="nouveau_mdp" 
+                                                                   required
+                                                                   minlength="6">
+                                                            <button class="btn btn-outline-secondary" 
+                                                                    type="button"
+                                                                    onclick="togglePassword('nouveau_mdp{{ user.id }}')">
+                                                                <i class="fas fa-eye"></i>
+                                                            </button>
+                                                        </div>
+                                                        <div class="form-text">
+                                                            Le mot de passe doit contenir au moins 6 caractères
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                        <i class="fas fa-times me-1"></i>
+                                                        Annuler
+                                                    </button>
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i class="fas fa-save me-1"></i>
+                                                        Enregistrer
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Autres sections du panneau d'administration -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-car text-success me-2"></i>
+                        Véhicules
+                    </h5>
+                    <p class="card-text">Gérer les véhicules et leur planning</p>
+                    <a href="{{ url_for('planning') }}" class="btn btn-outline-success w-100">
+                        <i class="fas fa-calendar-alt me-1"></i>
+                        Voir le planning
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-tools text-info me-2"></i>
+                        Interventions
+                    </h5>
+                    <p class="card-text">Gérer les interventions et réparations</p>
+                    <a href="{{ url_for('liste_interventions') }}" class="btn btn-outline-info w-100">
+                        <i class="fas fa-wrench me-1"></i>
+                        Voir les interventions
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-boxes text-warning me-2"></i>
+                        Stock
+                    </h5>
+                    <p class="card-text">Gérer le stock de pièces</p>
+                    <a href="{{ url_for('liste_stock') }}" class="btn btn-outline-warning w-100">
+                        <i class="fas fa-box me-1"></i>
+                        Gérer le stock
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.btn {
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+.badge {
+    font-size: 0.85em;
+    padding: 0.4em 0.8em;
+}
+
+.table th {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.modal-content {
+    border: none;
+    border-radius: 10px;
+}
+
+.modal-header {
+    border-radius: 10px 10px 0 0;
+}
+
+.input-group .btn:hover {
+    transform: none;
+}
+</style>
+
+<script>
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    const icon = event.currentTarget.querySelector('i');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,242 @@
+/* Style général */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #f8f9fa;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+}
+
+.footer {
+    margin-top: auto;
+}
+
+/* Cartes et conteneurs */
+.card {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    border-top-left-radius: 10px !important;
+    border-top-right-radius: 10px !important;
+}
+
+/* Tableaux */
+.table-responsive {
+    border-radius: 10px;
+    overflow: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+/* Boutons et liens */
+.btn {
+    border-radius: 5px;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    touch-action: manipulation;
+}
+
+.btn-icon {
+    padding: 0.25rem 0.5rem;
+    margin-right: 0.25rem;
+}
+
+/* Formulaires */
+.form-control, .form-select {
+    border-radius: 5px;
+    padding: 0.5rem 0.75rem;
+}
+
+.form-label {
+    font-weight: 500;
+}
+
+/* Badges et étiquettes */
+.badge {
+    font-weight: 500;
+    padding: 0.5em 0.75em;
+    border-radius: 5px;
+}
+
+/* Détails des véhicules et interventions */
+.vehicle-details, .intervention-details {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: #6c757d;
+}
+
+/* Alertes et notifications */
+.alert {
+    border-radius: 10px;
+    border: none;
+}
+
+/* Optimisations mobiles */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .table-responsive {
+        margin: 0 -10px;
+        border-radius: 0;
+    }
+
+    .card {
+        margin: 10px 0;
+        border-radius: 0;
+    }
+
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+
+    .nav-link {
+        padding: 0.5rem;
+    }
+
+    input, select, textarea {
+        font-size: 16px !important; /* Empêche le zoom sur iOS */
+    }
+
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    .btn-icon {
+        width: auto;
+        margin-bottom: 0;
+    }
+
+    /* Fix pour le défilement élastique sur iOS */
+    html {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    body {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        overflow-y: scroll;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Animations tactiles */
+@media (hover: none) {
+    .card:hover {
+        transform: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    .btn:active {
+        transform: scale(0.98);
+    }
+}
+
+/* Support PWA */
+@media all and (display-mode: standalone) {
+    body {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .card {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Animations */
+.fade-in {
+    animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Couleurs spécifiques */
+.bg-maintenance {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.bg-repair {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.bg-inspection {
+    background-color: #0d6efd;
+    color: #fff;
+}
+
+/* Barre de recherche */
+.search-container {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.search-container .form-control {
+    padding-left: 2.5rem;
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+}
+
+/* Indicateurs de stock */
+.stock-indicator {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.stock-high {
+    background-color: #28a745;
+}
+
+.stock-medium {
+    background-color: #ffc107;
+}
+
+.stock-low {
+    background-color: #dc3545;
+}

@@ -1,0 +1,150 @@
+{% extends 'layout.html' %}
+
+{% block title %}Liste des interventions{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-tools me-2"></i>Liste des interventions</h1>
+    <a href="{{ url_for('ajouter_intervention') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i>Nouvelle intervention
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="search-container mb-3">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" id="searchIntervention" class="form-control search-input" placeholder="Rechercher une intervention..." data-table="interventionsTable">
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover" id="interventionsTable">
+                <thead>
+                    <tr>
+                        <th>Code Parc</th>
+                        <th>Date</th>
+                        <th>Client</th>
+                        <th>Véhicule</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Technicien</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for intervention in interventions %}
+                    <tr>
+                        <td>{{ intervention.vehicule_code_parc }}</td>
+                        <td>{{ intervention.date }}</td>
+                        <td>{{ intervention.client_nom }}</td>
+                        <td>{{ intervention.vehicule_marque }} {{ intervention.vehicule_modele }}</td>
+                        <td>{{ intervention.type }}</td>
+                        <td>
+                            <span class="text-truncate d-inline-block" style="max-width: 200px;" title="{{ intervention.description }}">
+                                {{ intervention.description }}
+                            </span>
+                        </td>
+                        <td>{{ intervention.technicien }}</td>
+                        <td>
+                            <span class="badge {% if intervention.statut == 'En cours' %}bg-warning{% elif intervention.statut == 'Terminée' %}bg-success{% else %}bg-secondary{% endif %}">
+                                {{ intervention.statut }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ url_for('details_intervention', intervention_id=intervention.id) }}" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Voir les détails">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ url_for('modifier_intervention', intervention_id=intervention.id) }}" class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Modifier">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% if current_user.role == 'admin' %}
+                                <button class="btn btn-sm btn-outline-danger" onclick="confirmerSuppression('{{ intervention.id }}')" data-bs-toggle="tooltip" title="Supprimer">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted">
+                            <div class="py-5">
+                                <i class="bi bi-inbox display-4 d-block mb-3"></i>
+                                <p class="mb-0">Aucune intervention enregistrée</p>
+                                <a href="{{ url_for('ajouter_intervention') }}" class="btn btn-primary mt-3">
+                                    <i class="bi bi-plus-circle me-1"></i>Créer une intervention
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="modalSuppression" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmer la suppression</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer cette intervention ?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Confirmer la suppression</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmerSuppression(interventionId) {
+    const modal = new bootstrap.Modal(document.getElementById('modalSuppression'));
+    const form = document.getElementById('deleteForm');
+    form.action = "{{ url_for('delete_intervention', intervention_id='') }}" + interventionId;
+    modal.show();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialiser les tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Fonction de recherche
+    const searchInput = document.getElementById('searchIntervention');
+    searchInput.addEventListener('keyup', function() {
+        const searchText = this.value.toLowerCase();
+        const table = document.getElementById('interventionsTable');
+        const rows = table.getElementsByTagName('tr');
+
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            const cells = row.getElementsByTagName('td');
+            let found = false;
+
+            for (let j = 0; j < cells.length; j++) {
+                const cell = cells[j];
+                if (cell.textContent.toLowerCase().indexOf(searchText) > -1) {
+                    found = true;
+                    break;
+                }
+            }
+
+            row.style.display = found ? '' : 'none';
+        }
+    });
+});
+</script>
+{% endblock %}

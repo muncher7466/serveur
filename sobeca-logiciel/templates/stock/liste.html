@@ -1,0 +1,528 @@
+{% extends 'layout.html' %}
+
+{% block title %}GESTION DU STOCK{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0" style="font-size: 2rem; font-weight: 700;">
+            <i class="bi bi-box-seam me-2" style="font-size: 2rem;"></i> GESTION DU STOCK
+        </h1>
+        <div>
+            <button onclick="demarrerInventaire()" class="btn btn-warning me-2" style="font-size: 1.2rem; font-weight: 500; padding: 0.5rem 1rem;">
+                <i class="bi bi-clipboard-check me-1" style="font-size: 1.2rem;"></i> INVENTAIRE
+            </button>
+            <a href="{{ url_for('historique_sorties') }}" class="btn btn-outline-info me-2" style="font-size: 1.2rem; font-weight: 500; padding: 0.5rem 1rem;">
+                <i class="bi bi-clock-history me-1" style="font-size: 1.2rem;"></i> HISTORIQUE
+            </a>
+            <a href="{{ url_for('ajouter_piece') }}" class="btn btn-primary" style="font-size: 1.2rem; font-weight: 500; padding: 0.5rem 1rem;">
+                <i class="bi bi-plus-circle me-1" style="font-size: 1.2rem;"></i> NOUVELLE PIÈCE
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow h-100" style="background-color: #1565c0;">
+                <div class="card-body text-white p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-currency-euro" style="font-size: 3rem;"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-4">
+                            <div style="font-size: 1.3rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem;">Valeur du Stock</div>
+                            <div style="font-size: 3rem; font-weight: 700; line-height: 1;">
+                                {{ "%.2f"|format(valeur_stock) }} €
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow h-100" style="background-color: #2e7d32;">
+                <div class="card-body text-white p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-box" style="font-size: 3rem;"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-4">
+                            <div style="font-size: 1.3rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem;">Nombre de Pièces</div>
+                            <div style="font-size: 3rem; font-weight: 700; line-height: 1;">
+                                {{ pieces|length }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow h-100" style="background-color: #c62828;">
+                <div class="card-body text-white p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-exclamation-triangle" style="font-size: 3rem;"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-4">
+                            <div style="font-size: 1.3rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem;">Stock Faible</div>
+                            <div style="font-size: 3rem; font-weight: 700; line-height: 1;">
+                                {{ stock_faible }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if stock_faible > 0 %}
+    <div class="alert border-0 shadow mb-4" role="alert" style="background-color: #c62828; color: white; padding: 1.25rem;">
+        <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+                <i class="bi bi-exclamation-triangle-fill" style="font-size: 2rem;"></i>
+            </div>
+            <div class="flex-grow-1 ms-4">
+                <div style="font-size: 1.4rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">Attention au Stock</div>
+                <div style="font-size: 1.2rem;">{{ stock_faible }} pièce(s) sont en quantité insuffisante.</div>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" style="font-size: 1.2rem;"></button>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text border-0 bg-light">
+                            <i class="bi bi-search" style="font-size: 1.2rem;"></i>
+                        </span>
+                        <input type="text" class="form-control border-0 bg-light" id="searchInput" placeholder="Rechercher une pièce..." style="font-size: 1.2rem; font-weight: 500;">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select border-0 bg-light" id="filterStock" style="font-size: 1.2rem; font-weight: 500;">
+                        <option value="all">TOUS LES STOCKS</option>
+                        <option value="low">STOCK FAIBLE</option>
+                        <option value="out">RUPTURE DE STOCK</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="border-0" style="font-size: 1.2rem; font-weight: 500;">RÉFÉRENCE</th>
+                            <th class="border-0" style="font-size: 1.2rem; font-weight: 500;">NOM</th>
+                            <th class="border-0" style="font-size: 1.2rem; font-weight: 500;">DESCRIPTION</th>
+                            <th class="border-0" style="font-size: 1.2rem; font-weight: 500;">QUANTITÉ</th>
+                            <th class="border-0" style="font-size: 1.2rem; font-weight: 500;">QUANTITÉ MIN.</th>
+                            <th class="border-0" style="font-size: 1.2rem; font-weight: 500;">PRIX D'ACHAT</th>
+                            <th class="border-0" style="font-size: 1.2rem; font-weight: 500;">PRIX DE VENTE</th>
+                            <th class="border-0" style="font-size: 1.2rem; font-weight: 500;">ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for piece in pieces %}
+                        <tr class="{% if piece.quantite <= piece.quantite_min %}table-warning{% endif %} {% if piece.quantite == 0 %}table-danger{% endif %}">
+                            <td class="fw-medium" style="font-size: 1.2rem; font-weight: 500;">{{ piece.reference }}</td>
+                            <td style="font-size: 1.2rem; font-weight: 500;">{{ piece.nom }}</td>
+                            <td style="font-size: 1.2rem; font-weight: 500;">{{ piece.description }}</td>
+                            <td>
+                                <span class="badge rounded-pill {% if piece.quantite <= piece.quantite_min %}bg-warning{% elif piece.quantite == 0 %}bg-danger{% else %}bg-success{% endif %}" style="font-size: 1.1rem; font-weight: 500;">
+                                    {{ piece.quantite }}
+                                </span>
+                            </td>
+                            <td style="font-size: 1.2rem; font-weight: 500;">{{ piece.quantite_min }}</td>
+                            <td style="font-size: 1.2rem; font-weight: 500;">{{ "%.2f"|format(piece.prix_achat) }} €</td>
+                            <td style="font-size: 1.2rem; font-weight: 500;">{{ "%.2f"|format(piece.prix_vente) }} €</td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="ajusterStock('{{ piece.id }}', {{ piece.quantite }})" style="font-size: 1.1rem; font-weight: 500; padding: 0.4rem 0.6rem;">
+                                        <i class="bi bi-plus-slash-minus" style="font-size: 1.1rem;"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="sortirPiece('{{ piece.id }}', {{ piece.quantite }}, '{{ piece.nom }}')" style="font-size: 1.1rem; font-weight: 500; padding: 0.4rem 0.6rem;">
+                                        <i class="bi bi-box-arrow-right" style="font-size: 1.1rem;"></i>
+                                    </button>
+                                    <a href="{{ url_for('modifier_piece', id=piece.id) }}" class="btn btn-sm btn-outline-info" style="font-size: 1.1rem; font-weight: 500; padding: 0.4rem 0.6rem;">
+                                        <i class="bi bi-pencil" style="font-size: 1.1rem;"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal d'ajustement du stock -->
+<div class="modal fade" id="stockModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" style="font-size: 1.4rem; font-weight: 600;">AJUSTER LE STOCK</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style="font-size: 1.2rem;"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="pieceId">
+                <div class="mb-3">
+                    <label class="form-label" style="font-size: 1.2rem; font-weight: 500;">QUANTITÉ ACTUELLE</label>
+                    <input type="number" class="form-control bg-light" id="quantiteActuelle" readonly style="font-size: 1.1rem; font-weight: 500;">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" style="font-size: 1.2rem; font-weight: 500;">NOUVELLE QUANTITÉ</label>
+                    <input type="number" class="form-control" id="nouvelleQuantite" min="0" style="font-size: 1.1rem; font-weight: 500;">
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="font-size: 1.1rem; font-weight: 500; padding: 0.4rem 0.6rem;">ANNULER</button>
+                <button type="button" class="btn btn-primary" onclick="sauvegarderStock()" style="font-size: 1.1rem; font-weight: 500; padding: 0.4rem 0.6rem;">ENREGISTRER</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de sortie de pièce -->
+<div class="modal fade" id="sortieModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" style="font-size: 1.4rem; font-weight: 600;">SORTIE DE PIÈCE</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style="font-size: 1.2rem;"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="pieceIdSortie">
+                <div class="mb-3">
+                    <label class="form-label" style="font-size: 1.2rem; font-weight: 500;">VÉHICULE</label>
+                    <select class="form-select" id="vehiculeId" style="font-size: 1.1rem; font-weight: 500;">
+                        <option value="">SÉLECTIONNEZ UN VÉHICULE</option>
+                        {% for vehicule in vehicules %}
+                        <option value="{{ vehicule.id }}">{{ vehicule.marque }} {{ vehicule.modele }} - {{ vehicule.immatriculation }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" style="font-size: 1.2rem; font-weight: 500;">INTERVENTION</label>
+                    <select class="form-select" id="interventionId" style="font-size: 1.1rem; font-weight: 500;">
+                        <option value="">SÉLECTIONNEZ UNE INTERVENTION</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" style="font-size: 1.2rem; font-weight: 500;">QUANTITÉ À SORTIR</label>
+                    <input type="number" class="form-control" id="quantiteSortie" min="1" style="font-size: 1.1rem; font-weight: 500;">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" style="font-size: 1.2rem; font-weight: 500;">COMMENTAIRE</label>
+                    <textarea class="form-control" id="commentaireSortie" rows="2" style="font-size: 1.1rem; font-weight: 500;"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="font-size: 1.1rem; font-weight: 500; padding: 0.4rem 0.6rem;">ANNULER</button>
+                <button type="button" class="btn btn-primary" onclick="sauvegarderSortie()" style="font-size: 1.1rem; font-weight: 500; padding: 0.4rem 0.6rem;">ENREGISTRER</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal d'inventaire -->
+<div class="modal fade" id="inventaireModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" style="font-size: 1.4rem; font-weight: 600;">INVENTAIRE DU STOCK</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style="font-size: 1.2rem;"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info" role="alert" style="font-size: 1.1rem;">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Vérifiez les quantités physiques et ajustez-les si nécessaire.
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th style="font-size: 1.2rem; font-weight: 500;">RÉFÉRENCE</th>
+                                <th style="font-size: 1.2rem; font-weight: 500;">NOM</th>
+                                <th style="font-size: 1.2rem; font-weight: 500;">QTÉ SYSTÈME</th>
+                                <th style="font-size: 1.2rem; font-weight: 500;">QTÉ PHYSIQUE</th>
+                                <th style="font-size: 1.2rem; font-weight: 500;">ÉCART</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventaireTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="font-size: 1.1rem; font-weight: 500; padding: 0.4rem 0.6rem;">ANNULER</button>
+                <button type="button" class="btn btn-primary" onclick="validerInventaire()" style="font-size: 1.1rem; font-weight: 500; padding: 0.4rem 0.6rem;">VALIDER L'INVENTAIRE</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-gradient {
+        transition: transform 0.2s;
+    }
+    .bg-gradient:hover {
+        transform: translateY(-5px);
+    }
+    .table > :not(caption) > * > * {
+        padding: 1.25rem;
+    }
+    .badge {
+        font-size: 1rem;
+        padding: 0.5rem 0.8rem;
+    }
+    .btn-group .btn {
+        padding: 0.5rem 0.8rem;
+    }
+    .btn-group .btn i {
+        font-size: 1.1rem;
+    }
+    body {
+        font-size: 1.2rem;
+        font-weight: 500;
+    }
+    h1, h2, h3, h4, h5, h6 {
+        font-weight: 700;
+    }
+    .text-uppercase {
+        text-transform: uppercase;
+    }
+    .shadow {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialiser les filtres
+        const searchInput = document.getElementById('searchInput');
+        const filterStock = document.getElementById('filterStock');
+        const tableRows = document.querySelectorAll('tbody tr');
+
+        function filterTable() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const filterValue = filterStock.value;
+
+            tableRows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const quantity = parseInt(row.querySelector('td:nth-child(4)').textContent);
+                const minQuantity = parseInt(row.querySelector('td:nth-child(5)').textContent);
+                
+                let showRow = text.includes(searchTerm);
+                
+                if (filterValue === 'low') {
+                    showRow = showRow && quantity <= minQuantity && quantity > 0;
+                } else if (filterValue === 'out') {
+                    showRow = showRow && quantity === 0;
+                }
+                
+                row.style.display = showRow ? '' : 'none';
+            });
+        }
+
+        searchInput.addEventListener('input', filterTable);
+        filterStock.addEventListener('change', filterTable);
+    });
+
+    function ajusterStock(pieceId, quantiteActuelle) {
+        document.getElementById('pieceId').value = pieceId;
+        document.getElementById('quantiteActuelle').value = quantiteActuelle;
+        new bootstrap.Modal(document.getElementById('stockModal')).show();
+    }
+
+    function sauvegarderStock() {
+        const pieceId = document.getElementById('pieceId').value;
+        const nouvelleQuantite = document.getElementById('nouvelleQuantite').value;
+        
+        fetch(`/stock/ajuster/${pieceId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `quantite=${nouvelleQuantite}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erreur lors de l\'ajustement du stock');
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors de l\'ajustement du stock');
+        });
+    }
+
+    function sortirPiece(pieceId, quantiteDisponible, pieceNom) {
+        document.getElementById('pieceIdSortie').value = pieceId;
+        document.getElementById('quantiteSortie').max = quantiteDisponible;
+        document.getElementById('quantiteSortie').value = 1;
+        
+        // Charger les véhicules
+        fetch('/api/vehicules')
+            .then(response => response.json())
+            .then(vehicules => {
+                const select = document.getElementById('vehiculeId');
+                select.innerHTML = '<option value="">Sélectionnez un véhicule</option>';
+                vehicules.forEach(vehicule => {
+                    const option = document.createElement('option');
+                    option.value = vehicule.id;
+                    option.textContent = `${vehicule.marque} ${vehicule.modele} (${vehicule.immatriculation}) - ${vehicule.proprietaire}`;
+                    select.appendChild(option);
+                });
+            });
+        
+        // Réinitialiser le sélecteur d'intervention
+        document.getElementById('interventionId').innerHTML = '<option value="">Sélectionnez une intervention</option>';
+        
+        new bootstrap.Modal(document.getElementById('sortieModal')).show();
+    }
+
+    // Ajouter un écouteur d'événements pour le changement de véhicule
+    document.getElementById('vehiculeId').addEventListener('change', function() {
+        const vehiculeId = this.value;
+        const interventionSelect = document.getElementById('interventionId');
+        
+        if (vehiculeId) {
+            // Charger les interventions du véhicule
+            fetch(`/api/vehicules/${vehiculeId}/interventions`)
+                .then(response => response.json())
+                .then(interventions => {
+                    interventionSelect.innerHTML = '<option value="">Sélectionnez une intervention</option>';
+                    interventions.forEach(intervention => {
+                        const option = document.createElement('option');
+                        option.value = intervention.id;
+                        option.textContent = `${intervention.type} - ${intervention.date}`;
+                        interventionSelect.appendChild(option);
+                    });
+                });
+        } else {
+            interventionSelect.innerHTML = '<option value="">Sélectionnez une intervention</option>';
+        }
+    });
+
+    function sauvegarderSortie() {
+        const pieceId = document.getElementById('pieceIdSortie').value;
+        const vehiculeId = document.getElementById('vehiculeId').value;
+        const interventionId = document.getElementById('interventionId').value;
+        const quantite = document.getElementById('quantiteSortie').value;
+        const commentaire = document.getElementById('commentaireSortie').value;
+        
+        if (!vehiculeId) {
+            alert('Veuillez sélectionner un véhicule');
+            return;
+        }
+        
+        if (!interventionId) {
+            alert('Veuillez sélectionner une intervention');
+            return;
+        }
+        
+        fetch('/stock/sortie', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `piece_id=${pieceId}&vehicule_id=${vehiculeId}&intervention_id=${interventionId}&quantite=${quantite}&commentaire=${commentaire}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Erreur lors de la sortie de la pièce');
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors de la sortie de la pièce');
+        });
+    }
+
+    function demarrerInventaire() {
+        // Récupérer toutes les pièces
+        fetch('/api/pieces')
+            .then(response => response.json())
+            .then(pieces => {
+                const tbody = document.getElementById('inventaireTableBody');
+                tbody.innerHTML = '';
+                
+                pieces.forEach(piece => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="font-size: 1.1rem; font-weight: 500;">${piece.reference}</td>
+                        <td style="font-size: 1.1rem; font-weight: 500;">${piece.nom}</td>
+                        <td style="font-size: 1.1rem; font-weight: 500;">${piece.quantite}</td>
+                        <td>
+                            <input type="number" class="form-control" 
+                                   value="${piece.quantite}"
+                                   min="0"
+                                   data-piece-id="${piece.id}"
+                                   data-quantite-systeme="${piece.quantite}"
+                                   onchange="calculerEcart(this)"
+                                   style="font-size: 1.1rem; font-weight: 500;">
+                        </td>
+                        <td class="ecart" style="font-size: 1.1rem; font-weight: 500;">0</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                
+                new bootstrap.Modal(document.getElementById('inventaireModal')).show();
+            });
+    }
+
+    function calculerEcart(input) {
+        const qteSysteme = parseInt(input.dataset.quantiteSysteme);
+        const qtePhysique = parseInt(input.value);
+        const ecart = qtePhysique - qteSysteme;
+        
+        const tdEcart = input.closest('tr').querySelector('.ecart');
+        tdEcart.textContent = ecart;
+        tdEcart.style.color = ecart < 0 ? '#dc3545' : ecart > 0 ? '#28a745' : 'inherit';
+    }
+
+    function validerInventaire() {
+        const updates = [];
+        document.querySelectorAll('#inventaireTableBody input[type="number"]').forEach(input => {
+            const pieceId = input.dataset.pieceId;
+            const nouvelleQuantite = parseInt(input.value);
+            updates.push({ pieceId, quantite: nouvelleQuantite });
+        });
+        
+        fetch('/stock/inventaire', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ updates })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erreur lors de la mise à jour de l\'inventaire');
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors de la mise à jour de l\'inventaire');
+        });
+    }
+</script>
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}

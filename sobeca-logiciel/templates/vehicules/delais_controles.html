@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0" style="font-size: 2rem; font-weight: 700;">
+            <i class="bi bi-gear me-2" style="font-size: 2rem;"></i> CONFIGURATION DES DÉLAIS DE CONTRÔLE
+        </h1>
+    </div>
+
+    <div class="card border-0 shadow">
+        <div class="card-body p-4">
+            <form method="POST" action="{{ url_for('gerer_delais_controles') }}">
+                <!-- Contrôle Technique -->
+                <div class="mb-4">
+                    <h3 class="mb-3" style="font-size: 1.5rem; font-weight: 600;">CONTRÔLE TECHNIQUE</h3>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Délai d'attention (jours)</label>
+                            <input type="number" class="form-control" name="ct_attention" 
+                                   value="{{ delais.ct.attention }}" required min="1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Délai d'urgence (jours)</label>
+                            <input type="number" class="form-control" name="ct_urgent" 
+                                   value="{{ delais.ct.urgent }}" required min="1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Période (jours)</label>
+                            <input type="number" class="form-control" name="ct_periode" 
+                                   value="{{ delais.ct.periode }}" required min="1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mines -->
+                <div class="mb-4">
+                    <h3 class="mb-3" style="font-size: 1.5rem; font-weight: 600;">MINES</h3>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Délai d'attention (jours)</label>
+                            <input type="number" class="form-control" name="mine_attention" 
+                                   value="{{ delais.mine.attention }}" required min="1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Délai d'urgence (jours)</label>
+                            <input type="number" class="form-control" name="mine_urgent" 
+                                   value="{{ delais.mine.urgent }}" required min="1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Période (jours)</label>
+                            <input type="number" class="form-control" name="mine_periode" 
+                                   value="{{ delais.mine.periode }}" required min="1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tachygraphe -->
+                <div class="mb-4">
+                    <h3 class="mb-3" style="font-size: 1.5rem; font-weight: 600;">TACHYGRAPHE</h3>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Délai d'attention (jours)</label>
+                            <input type="number" class="form-control" name="tachy_attention" 
+                                   value="{{ delais.tachy.attention }}" required min="1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Délai d'urgence (jours)</label>
+                            <input type="number" class="form-control" name="tachy_urgent" 
+                                   value="{{ delais.tachy.urgent }}" required min="1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Période (jours)</label>
+                            <input type="number" class="form-control" name="tachy_periode" 
+                                   value="{{ delais.tachy.periode }}" required min="1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VGP -->
+                <div class="mb-4">
+                    <h3 class="mb-3" style="font-size: 1.5rem; font-weight: 600;">VGP</h3>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Délai d'attention (jours)</label>
+                            <input type="number" class="form-control" name="vgp_attention" 
+                                   value="{{ delais.vgp.attention }}" required min="1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Délai d'urgence (jours)</label>
+                            <input type="number" class="form-control" name="vgp_urgent" 
+                                   value="{{ delais.vgp.urgent }}" required min="1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Période (jours)</label>
+                            <input type="number" class="form-control" name="vgp_periode" 
+                                   value="{{ delais.vgp.periode }}" required min="1">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('alertes_controles') }}" class="btn btn-secondary" 
+                       style="font-size: 1.1rem; font-weight: 500;">
+                        <i class="bi bi-arrow-left me-2"></i>RETOUR
+                    </a>
+                    <button type="submit" class="btn btn-primary" 
+                            style="font-size: 1.1rem; font-weight: 500;">
+                        <i class="bi bi-save me-2"></i>ENREGISTRER
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

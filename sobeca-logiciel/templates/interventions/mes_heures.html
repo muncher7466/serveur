@@ -1,0 +1,89 @@
+{% extends "layout.html" %}
+
+{% block title %}Mes heures{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Mes heures d'intervention</h2>
+        <a href="{{ url_for('heures_supplementaires') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i>Ajouter des heures supplémentaires
+        </a>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total des heures</h5>
+                    <p class="card-text display-6">{{ "%.1f"|format(stats.total_heures|float) }} h</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Nombre d'interventions</h5>
+                    <p class="card-text display-6">{{ stats.nombre_interventions }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Moyenne par intervention</h5>
+                    <p class="card-text display-6">
+                        {% if stats.nombre_interventions > 0 %}
+                            {{ "%.1f"|format(stats.total_heures|float / stats.nombre_interventions) }} h
+                        {% else %}
+                            0.0 h
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Détail des interventions</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Véhicule</th>
+                            <th>Heures</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for intervention in stats.interventions %}
+                        <tr>
+                            <td>{{ intervention.get('date', '') }}</td>
+                            <td>{{ intervention.get('type', '') }}</td>
+                            <td>
+                                {% if intervention.get('vehicule_id') %}
+                                    {% for vehicule in vehicules %}
+                                        {% if vehicule['id'] == intervention['vehicule_id'] %}
+                                            {{ vehicule['marque'] }} {{ vehicule['modele'] }} ({{ vehicule['immatriculation'] }})
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>{{ "%.1f"|format(intervention.get('heures', 0)|float) }} h</td>
+                            <td>{{ intervention.get('description', '') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

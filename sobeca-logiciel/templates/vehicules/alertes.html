@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0" style="font-size: 2rem; font-weight: 700;">
+            <i class="bi bi-exclamation-triangle me-2" style="font-size: 2rem;"></i> ALERTES CONTRÔLES
+        </h1>
+        {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('gerer_delais_controles') }}" class="btn btn-primary" style="font-size: 1.1rem; font-weight: 500;">
+            <i class="bi bi-gear me-2"></i>CONFIGURER LES DÉLAIS
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Filtres -->
+    <div class="card border-0 shadow mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <select class="form-select" id="filterType" style="font-size: 1.2rem; font-weight: 500;">
+                        <option value="all">TOUS LES TYPES</option>
+                        <option value="ct">CONTRÔLE TECHNIQUE</option>
+                        <option value="mine">MINES</option>
+                        <option value="tachy">TACHYGRAPHE</option>
+                        <option value="vgp">VGP</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select" id="filterUrgence" style="font-size: 1.2rem; font-weight: 500;">
+                        <option value="all">TOUTES LES URGENCES</option>
+                        <option value="urgent">URGENT (< {{ delais.ct.urgent }} jours)</option>
+                        <option value="attention">ATTENTION ({{ delais.ct.urgent }}-{{ delais.ct.attention }} jours)</option>
+                        <option value="ok">OK (> {{ delais.ct.attention }} jours)</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text border-0 bg-light">
+                            <i class="bi bi-search" style="font-size: 1.2rem;"></i>
+                        </span>
+                        <input type="text" class="form-control border-0 bg-light" id="searchInput" 
+                               placeholder="Rechercher..." style="font-size: 1.2rem; font-weight: 500;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertes -->
+    <div class="row g-4">
+        {% for alerte in alertes %}
+        <div class="col-md-6 alerte-item" 
+             data-type="{{ alerte.type }}" 
+             data-urgence="{{ alerte.urgence }}"
+             data-search="{{ alerte.vehicule.marque }} {{ alerte.vehicule.modele }} {{ alerte.vehicule.immatriculation }}">
+            <div class="card border-0 shadow h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="card-title mb-0" style="font-size: 1.4rem; font-weight: 600;">
+                            {{ alerte.vehicule.marque }} {{ alerte.vehicule.modele }}
+                        </h5>
+                        <span class="badge rounded-pill 
+                            {% if alerte.urgence == 'urgent' %}bg-danger
+                            {% elif alerte.urgence == 'attention' %}bg-warning
+                            {% else %}bg-success{% endif %}"
+                            style="font-size: 1.1rem; font-weight: 500;">
+                            {% if alerte.urgence == 'urgent' %}URGENT
+                            {% elif alerte.urgence == 'attention' %}ATTENTION
+                            {% else %}OK{% endif %}
+                            ({{ alerte.jours_restants }} jours)
+                        </span>
+                    </div>
+                    <div class="mb-3" style="font-size: 1.2rem; font-weight: 500;">
+                        <i class="bi bi-truck me-2"></i> {{ alerte.vehicule.immatriculation }}
+                    </div>
+                    <div class="mb-3" style="font-size: 1.2rem;">
+                        <div class="mb-2">
+                            <strong>Type de contrôle:</strong> 
+                            {% if alerte.type == 'ct' %}CONTRÔLE TECHNIQUE
+                            {% elif alerte.type == 'mine' %}MINES
+                            {% elif alerte.type == 'vgp' %}VGP
+                            {% else %}TACHYGRAPHE{% endif %}
+                        </div>
+                        <div class="mb-2">
+                            <strong>Date du dernier contrôle:</strong> {{ alerte.dernier_controle }}
+                        </div>
+                        <div>
+                            <strong>Prochain contrôle:</strong> {{ alerte.prochain_controle }}
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button onclick="marquerEffectue('{{ alerte.id }}', '{{ alerte.vehicule.id }}')" 
+                                class="btn btn-primary" style="font-size: 1.1rem; font-weight: 500;">
+                            <i class="bi bi-check2-circle me-2"></i>MARQUER EFFECTUÉ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const filterType = document.getElementById('filterType');
+    const filterUrgence = document.getElementById('filterUrgence');
+    const alerteItems = document.querySelectorAll('.alerte-item');
+
+    function filterAlertes() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const typeFilter = filterType.value;
+        const urgenceFilter = filterUrgence.value;
+
+        alerteItems.forEach(item => {
+            const type = item.dataset.type;
+            const urgence = item.dataset.urgence;
+            const searchText = item.dataset.search.toLowerCase();
+
+            const matchesSearch = searchText.includes(searchTerm);
+            const matchesType = typeFilter === 'all' || type === typeFilter;
+            const matchesUrgence = urgenceFilter === 'all' || urgence === urgenceFilter;
+
+            if (matchesSearch && matchesType && matchesUrgence) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    searchInput.addEventListener('input', filterAlertes);
+    filterType.addEventListener('change', filterAlertes);
+    filterUrgence.addEventListener('change', filterAlertes);
+});
+
+function marquerEffectue(alerteId, vehiculeId) {
+    if (!confirm('Confirmez-vous que le contrôle a été effectué ?')) {
+        return;
+    }
+
+    fetch('/vehicules/controle/effectue', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            alerte_id: alerteId,
+            vehicule_id: vehiculeId,
+            date: new Date().toISOString().split('T')[0]
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Erreur lors de la mise à jour du contrôle');
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors de la mise à jour du contrôle');
+    });
+}
+</script>
+{% endblock %}

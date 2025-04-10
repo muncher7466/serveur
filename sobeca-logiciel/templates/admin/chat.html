@@ -1,0 +1,439 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Conversations</h5>
+                    <div>
+                        <button class="btn btn-sm btn-warning me-2" onclick="openReportModal()">
+                            <i class="bi bi-exclamation-triangle"></i> Signaler
+                        </button>
+                        <button class="btn btn-sm btn-primary" onclick="createNewConversation()">
+                            <i class="bi bi-plus-lg"></i> Nouvelle
+                        </button>
+                    </div>
+                </div>
+                <div class="list-group list-group-flush" id="conversations-list">
+                    <!-- Les conversations seront chargées dynamiquement ici -->
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center p-3 border-bottom">
+                    <h5 class="mb-0" id="conversation-title">Sélectionnez une conversation</h5>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="show-participants-btn" style="display: none;" data-bs-toggle="modal" data-bs-target="#participantsModal">
+                            <i class="bi bi-people"></i> Participants
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteCurrentConversation()" id="delete-conversation-btn" style="display: none;">
+                            <i class="bi bi-trash"></i> Supprimer la conversation
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="chat-messages" class="chat-messages">
+                        <!-- Les messages seront chargés dynamiquement ici -->
+                    </div>
+                    <form id="message-form" class="mt-3" style="display: none;">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="message-input" placeholder="Écrivez votre message...">
+                            <button class="btn btn-primary" type="submit">Envoyer</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+{% include 'admin/modals/chat_modals.html' %}
+
+<!-- Modal pour afficher les participants -->
+<div class="modal fade" id="participantsModal" tabindex="-1" aria-labelledby="participantsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="participantsModalLabel">Participants de la conversation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="list-group" id="participants-list">
+                    <!-- La liste des participants sera chargée ici -->
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+let currentConversationId = null;
+let currentUserId = '{{ current_user.id }}';
+let isAdmin = '{{ current_user.role }}' === 'admin';
+let users = [];
+
+// Fonction pour charger les conversations
+function loadConversations() {
+    fetch('/api/conversations')
+        .then(response => response.json())
+        .then(conversations => {
+            const conversationsList = document.getElementById('conversations-list');
+            conversationsList.innerHTML = conversations.map(conv => `
+                <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center conversation-item ${conv.id === currentConversationId ? 'active' : ''}" 
+                   onclick="loadMessages('${conv.id}', '${conv.name}', '${conv.created_by}')"
+                   data-created-by="${conv.created_by}">
+                    <span>${conv.name}</span>
+                    <span class="badge bg-danger rounded-pill unread-count" id="unread-${conv.id}" style="display: none;">0</span>
+                </a>
+            `).join('');
+            
+            // Mettre à jour les compteurs de messages non lus
+            updateUnreadCountsForConversations(conversations);
+        });
+}
+
+// Fonction pour mettre à jour les compteurs de messages non lus par conversation
+function updateUnreadCountsForConversations(conversations) {
+    conversations.forEach(conv => {
+        fetch(`/api/messages/${conv.id}`)
+            .then(response => response.json())
+            .then(messages => {
+                const unreadCount = messages.filter(msg => 
+                    msg.sender_id !== currentUserId && 
+                    (!msg.lu || !msg.lu[currentUserId])
+                ).length;
+                
+                const badge = document.getElementById(`unread-${conv.id}`);
+                if (badge) {
+                    badge.textContent = unreadCount;
+                    badge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+                }
+
+                // Mettre à jour le badge global
+                updateUnreadCount();
+            });
+    });
+}
+
+// Fonction pour mettre à jour le compteur global de messages non lus
+function updateUnreadCount() {
+    fetch('/api/unread-count')
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.getElementById('unread-badge');
+            if (badge) {
+                badge.textContent = data.count;
+                badge.style.display = data.count > 0 ? 'inline-block' : 'none';
+            }
+        })
+        .catch(error => console.error('Erreur:', error));
+}
+
+// Fonction pour mettre à jour l'affichage du bouton de suppression
+function updateDeleteButton(createdBy) {
+    const deleteBtn = document.getElementById('delete-conversation-btn');
+    // Afficher le bouton si l'utilisateur est admin ou créateur de la conversation
+    if (isAdmin || createdBy === currentUserId) {
+        deleteBtn.style.display = 'inline-block';
+    } else {
+        deleteBtn.style.display = 'none';
+    }
+}
+
+// Fonction pour charger les messages
+function loadMessages(conversationId, conversationName, createdBy) {
+    currentConversationId = conversationId;
+    
+    // Mettre à jour le titre et afficher le formulaire
+    document.getElementById('conversation-title').textContent = conversationName;
+    document.getElementById('message-form').style.display = 'block';
+    document.getElementById('message-form').dataset.conversationId = conversationId;
+    
+    // Afficher les boutons
+    document.getElementById('show-participants-btn').style.display = 'inline-block';
+    updateDeleteButton(createdBy);
+    
+    // Mettre à jour l'apparence des conversations
+    document.querySelectorAll('.conversation-item').forEach(item => {
+        item.classList.toggle('active', item.getAttribute('data-created-by') === createdBy);
+    });
+    
+    // Charger les participants
+    loadParticipants(conversationId);
+    
+    fetch(`/api/messages/${conversationId}`)
+        .then(response => response.json())
+        .then(messages => {
+            const chatMessages = document.getElementById('chat-messages');
+            chatMessages.innerHTML = messages.map(msg => `
+                <div class="message ${msg.sender_id === currentUserId ? 'sent' : 'received'} ${(!msg.lu || !msg.lu[currentUserId]) ? 'unread' : ''}" 
+                     data-message-id="${msg.id}">
+                    <div class="message-content">
+                        <small class="sender">${msg.sender_name}</small>
+                        <p class="mb-1">${msg.content}</p>
+                        <small class="time">${new Date(msg.created_at).toLocaleString()}</small>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Faire défiler jusqu'au dernier message
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Marquer les messages comme lus
+            messages.forEach(msg => {
+                if (!msg.lu || !msg.lu[currentUserId]) {
+                    markMessageAsRead(msg.id);
+                }
+            });
+        });
+}
+
+// Fonction pour charger les participants d'une conversation
+function loadParticipants(conversationId) {
+    fetch(`/api/conversations/${conversationId}/participants`)
+        .then(response => response.json())
+        .then(participants => {
+            const participantsList = document.getElementById('participants-list');
+            participantsList.innerHTML = participants.map(user => `
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-person-circle me-2"></i>
+                        ${user.name}
+                    </div>
+                    ${user.role === 'admin' ? '<span class="badge bg-primary">Admin</span>' : ''}
+                </li>
+            `).join('');
+        });
+}
+
+// Fonction pour marquer un message comme lu
+function markMessageAsRead(messageId) {
+    fetch(`/messages/marquer_lu/${messageId}`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(() => {
+        // Mettre à jour le compteur global
+        updateUnreadCount();
+        // Mettre à jour le compteur de la conversation
+        if (currentConversationId) {
+            fetch(`/api/messages/${currentConversationId}`)
+                .then(response => response.json())
+                .then(messages => {
+                    const unreadCount = messages.filter(msg => 
+                        msg.sender_id !== currentUserId && 
+                        (!msg.lu || !msg.lu[currentUserId])
+                    ).length;
+                    
+                    const badge = document.getElementById(`unread-${currentConversationId}`);
+                    if (badge) {
+                        badge.textContent = unreadCount;
+                        badge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+                    }
+                });
+        }
+    });
+}
+
+// Fonction pour créer une nouvelle conversation
+function createNewConversation() {
+    // Charger la liste des utilisateurs avant d'afficher le modal
+    loadUsers().then(() => {
+        const modal = new bootstrap.Modal(document.getElementById('newConversationModal'));
+        modal.show();
+    });
+}
+
+// Fonction pour charger la liste des utilisateurs
+function loadUsers() {
+    return fetch('/api/users')
+        .then(response => response.json())
+        .then(data => {
+            users = data.filter(user => user.id !== currentUserId);
+            const participantsList = document.getElementById('participantsList');
+            participantsList.innerHTML = users.map(user => `
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="${user.id}" id="user${user.id}">
+                    <label class="form-check-label" for="user${user.id}">
+                        ${user.name}
+                    </label>
+                </div>
+            `).join('');
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des utilisateurs:', error);
+            alert('Erreur lors du chargement des utilisateurs');
+        });
+}
+
+// Fonction pour confirmer la création de la conversation
+function confirmCreateConversation() {
+    const name = document.getElementById('conversationName').value;
+    const selectedUsers = Array.from(document.querySelectorAll('#participantsList input[type="checkbox"]:checked'))
+        .map(checkbox => checkbox.value);
+    
+    if (!name) {
+        alert('Veuillez entrer un nom pour la conversation');
+        return;
+    }
+
+    if (selectedUsers.length === 0) {
+        alert('Veuillez sélectionner au moins un participant');
+        return;
+    }
+
+    // Ajouter l'utilisateur courant aux participants
+    selectedUsers.push(currentUserId);
+
+    fetch('/api/conversations', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            name: name,
+            participants: selectedUsers
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Erreur lors de la création de la conversation');
+        }
+        return response.json();
+    })
+    .then(conversation => {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('newConversationModal'));
+        modal.hide();
+        document.getElementById('conversationName').value = '';
+        // Recharger les conversations
+        loadConversations();
+        // Charger la nouvelle conversation
+        loadMessages(conversation.id, conversation.name, conversation.created_by);
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors de la création de la conversation. Veuillez réessayer.');
+    });
+}
+
+// Fonction pour supprimer la conversation courante
+function deleteCurrentConversation() {
+    if (currentConversationId) {
+        const modal = new bootstrap.Modal(document.getElementById('deleteConversationModal'));
+        modal.show();
+    }
+}
+
+// Fonction pour confirmer la suppression
+function confirmDeleteConversation() {
+    if (!currentConversationId) return;
+
+    fetch(`/api/conversations/delete/${currentConversationId}`, {
+        method: 'DELETE'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Erreur lors de la suppression');
+        }
+        return response.json();
+    })
+    .then(() => {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('deleteConversationModal'));
+        modal.hide();
+        // Réinitialiser l'interface
+        currentConversationId = null;
+        document.getElementById('conversation-title').textContent = 'Messages';
+        document.getElementById('chat-messages').innerHTML = '';
+        document.getElementById('message-form').style.display = 'none';
+        document.getElementById('delete-conversation-btn').style.display = 'none';
+        document.getElementById('show-participants-btn').style.display = 'none';
+        // Recharger les conversations
+        loadConversations();
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors de la suppression de la conversation. Veuillez réessayer.');
+    });
+}
+
+// Fonction pour ouvrir le modal de signalement
+function openReportModal() {
+    const modal = new bootstrap.Modal(document.getElementById('reportModal'));
+    modal.show();
+}
+
+// Fonction pour soumettre un signalement
+function submitReport() {
+    const type = document.getElementById('reportType').value;
+    const content = document.getElementById('reportContent').value;
+
+    if (!content) {
+        alert('Veuillez décrire le problème');
+        return;
+    }
+
+    fetch('/api/reports', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            type: type,
+            content: content,
+            conversation_id: currentConversationId
+        })
+    })
+    .then(response => response.json())
+    .then(() => {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('reportModal'));
+        modal.hide();
+        document.getElementById('reportContent').value = '';
+        alert('Signalement envoyé avec succès');
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors de l\'envoi du signalement');
+    });
+}
+
+// Gestion de l'envoi des messages
+document.getElementById('message-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const messageInput = document.getElementById('message-input');
+    const content = messageInput.value.trim();
+    
+    if (content && currentConversationId) {
+        fetch('/api/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                conversation_id: currentConversationId,
+                content: content
+            })
+        })
+        .then(response => response.json())
+        .then(message => {
+            if (!message.error) {
+                messageInput.value = '';
+                loadMessages(currentConversationId, document.getElementById('conversation-title').textContent, document.querySelector('.conversation-item.active').getAttribute('data-created-by'));
+            }
+        });
+    }
+});
+
+// Charger les conversations au démarrage
+document.addEventListener('DOMContentLoaded', function() {
+    loadConversations();
+    // Actualiser les conversations toutes les 10 secondes
+    setInterval(loadConversations, 10000);
+});
+</script>
+{% endblock %}
+{% endblock %}

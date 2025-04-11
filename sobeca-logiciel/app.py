@@ -2438,3 +2438,26 @@ if __name__ == '__main__':
     # Note pour Steven Muncher : Ceci est une application de gestion de Garage Sobeca
     # Configuration pour l'accès local sur mobile
     app.run(host='0.0.0.0', port=5000, debug=True)
+
+
+
+
+
+from flask import Flask, send_file, abort, jsonify
+import os
+
+app = Flask(__name__)
+
+DATA_FOLDER = "data"  # ton dossier où sont stockés les JSON
+
+@app.route("/download/<filename>")
+def download_file(filename):
+    if not filename.endswith(".json"):
+        return "Seuls les fichiers JSON peuvent être téléchargés.", 400
+
+    file_path = os.path.join(DATA_FOLDER, filename)
+
+    if os.path.exists(file_path):
+        return send_file(file_path, as_attachment=True)
+    else:
+        return abort(404, description="Fichier non trouvé.")
